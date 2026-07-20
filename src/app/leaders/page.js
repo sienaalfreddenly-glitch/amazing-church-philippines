@@ -1,6 +1,7 @@
 import { createClient, getSessionAndProfile } from '@/lib/supabase-server';
 import Avatar from '@/components/Avatar';
-import { redirect } from 'next/navigation';
+import MembersOnlyGate from '@/components/MembersOnlyGate';
+import { isApproved } from '@/lib/roles';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,8 +9,11 @@ export const dynamic = 'force-dynamic';
 // Everyone else is a disciple.
 
 export default async function LeadersPage() {
-  const { profile } = await getSessionAndProfile();
-  if (!profile) redirect('/login');
+  const { user, profile } = await getSessionAndProfile();
+  if (!user || !isApproved(profile)) {
+    return <MembersOnlyGate title="Leaders"
+      description="Meet our shepherds and see the disciples they lead." />;
+  }
 
   const supabase = createClient();
   const { data: people } = await supabase

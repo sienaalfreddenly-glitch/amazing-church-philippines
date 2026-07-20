@@ -1,8 +1,8 @@
 import { createClient, getSessionAndProfile } from '@/lib/supabase-server';
 import PostCard from '@/components/PostCard';
 import PostComposer from '@/components/PostComposer';
+import MembersOnlyGate from '@/components/MembersOnlyGate';
 import { isApproved } from '@/lib/roles';
-import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,6 +17,10 @@ async function countComments(supabase, entityType, ids) {
 
 export default async function Discussions() {
   const { user, profile } = await getSessionAndProfile();
+  if (!user || !isApproved(profile)) {
+    return <MembersOnlyGate title="Discussions"
+      description="Ask, share, and grow together in faith with the church community." />;
+  }
   const supabase = createClient();
   const { data: threads } = await supabase
     .from('discussions')
