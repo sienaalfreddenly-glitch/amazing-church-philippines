@@ -53,7 +53,8 @@ export default async function Discussions() {
       )}
 
       {threads?.length ? threads.map(t =>
-        <PostCard key={t.id} item={t} kind="discussion" viewerRole={profile?.role}
+        <PostCard key={t.id} item={t} kind="discussion"
+          viewerRole={profile?.role} viewerId={user?.id}
           commentCount={commentCounts[t.id] || 0} />
       ) : <p className="text-ink/60 text-center py-8">No discussions yet.</p>}
     </div>

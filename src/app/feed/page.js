@@ -53,7 +53,8 @@ export default async function Feed() {
       )}
 
       {posts?.length ? posts.map(p =>
-        <PostCard key={p.id} item={p} kind="post" viewerRole={profile?.role}
+        <PostCard key={p.id} item={p} kind="post"
+          viewerRole={profile?.role} viewerId={user?.id}
           commentCount={commentCounts[p.id] || 0} />
       ) : <p className="text-ink/60 text-center py-8">No posts yet — be the first to share something.</p>}
     </div>

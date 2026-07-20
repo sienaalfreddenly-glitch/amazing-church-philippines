@@ -4,10 +4,12 @@ import ReactionBar from './ReactionBar';
 import CommentsSection from './CommentsSection';
 import TimeAgo from './TimeAgo';
 import { RenderMentions } from './MentionInput';
+import DeletePostButton from './DeletePostButton';
 import { isStaff } from '@/lib/roles';
 
-export default function PostCard({ item, kind, viewerRole, commentCount = 0 }) {
+export default function PostCard({ item, kind, viewerRole, viewerId, commentCount = 0 }) {
   const showMod = isStaff(viewerRole);
+  const canDelete = viewerId && (viewerId === item.author_id || isStaff(viewerRole));
   return (
     <article className="card">
       <header className="flex items-center justify-between">
@@ -18,11 +20,14 @@ export default function PostCard({ item, kind, viewerRole, commentCount = 0 }) {
             <p className="text-xs text-ink/50"><TimeAgo date={item.created_at} /></p>
           </div>
         </div>
-        {item.status !== 'approved' && (
-          <span className={`badge ${
-            item.status === 'pending' ? 'bg-silver-light text-ink/70' : 'bg-red-50 text-red-700'
-          }`}>{item.status}</span>
-        )}
+        <div className="flex items-center gap-2">
+          {item.status !== 'approved' && (
+            <span className={`badge ${
+              item.status === 'pending' ? 'bg-silver-light text-ink/70' : 'bg-red-50 text-red-700'
+            }`}>{item.status}</span>
+          )}
+          {canDelete && <DeletePostButton id={item.id} kind={kind} />}
+        </div>
       </header>
 
       {item.title && <h3 className="text-xl mt-4">{item.title}</h3>}
