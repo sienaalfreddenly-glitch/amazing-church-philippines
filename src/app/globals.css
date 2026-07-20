@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap');
+
+:root {
+  --brand: #7A1F2B;
+  --brand-2: #B15564;
+  --silver: #C9CACC;
+  --paper: #FBFAF7;
+  --ink: #141416;
+}
+
+html, body { background: var(--paper); color: var(--ink); }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-image:
+    radial-gradient(1200px 500px at 90% -200px, rgba(122,31,43,0.06), transparent 60%),
+    radial-gradient(900px 400px at -100px 200px, rgba(177,85,100,0.05), transparent 60%);
+  background-attachment: fixed;
+}
+h1, h2, h3 { font-family: 'Playfair Display', Georgia, serif; letter-spacing: -0.015em; }
+
+/* Buttons */
+.btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 active:scale-[0.97]; }
+.btn-primary { @apply btn text-white shadow-soft;
+  background-image: linear-gradient(135deg, #7A1F2B, #B15564);
+}
+.btn-primary:hover { @apply -translate-y-0.5 shadow-md; filter: brightness(1.05); }
+.btn-outline { @apply btn border border-silver text-ink hover:bg-silver-light hover:-translate-y-0.5; }
+.btn-danger  { @apply btn bg-red-700 text-white hover:bg-red-800; }
+
+/* Cards */
+.card {
+  @apply bg-white rounded-2xl border border-silver-light p-5 transition-all duration-300;
+  box-shadow: 0 1px 2px rgba(20,20,22,0.03), 0 6px 20px rgba(20,20,22,0.04);
+  transform-style: preserve-3d;
+}
+.card:hover {
+  box-shadow: 0 4px 8px rgba(20,20,22,0.06), 0 20px 40px rgba(122,31,43,0.08);
+}
+.card-static:hover { box-shadow: 0 1px 2px rgba(20,20,22,0.03), 0 6px 20px rgba(20,20,22,0.04); }
+
+/* Form controls */
+.input { @apply w-full rounded-xl border border-silver bg-white px-3.5 py-2.5 text-sm outline-none transition-all
+                focus:border-brand focus:ring-4 focus:ring-brand/10; }
+.label { @apply block text-xs font-semibold uppercase tracking-wider text-ink/60 mb-1.5; }
+.badge { @apply inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold; }
+
+/* Utility animations */
+@keyframes pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.5) rotate(-8deg); }
+  100% { transform: scale(1); }
+}
+.animate-pop { animation: pop 350ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+.bg-brand-flow {
+  background-size: 200% 200%;
+  animation: gradient-shift 18s ease-in-out infinite;
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.animate-spin-slow { animation: spin-slow 24s linear infinite; }
+
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 3s linear infinite;
+}
+
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.animate-floaty { animation: floaty 5s ease-in-out infinite; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fadeInUp 400ms ease-out both; }
+
+/* Sticky nav backdrop */
+.nav-blur {
+  backdrop-filter: saturate(140%) blur(8px);
+  background-color: rgba(255,255,255,0.75);
+}
+
+/* Line clamp helper */
+.line-clamp-6 {
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

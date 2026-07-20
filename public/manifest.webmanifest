@@ -1,0 +1,13 @@
+{
+  "name": "Amazing Church Philippines",
+  "short_name": "Amazing Church",
+  "description": "Community, discussions, courses, and live worship for Amazing Church Philippines.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FBFAF7",
+  "theme_color": "#7A1F2B",
+  "icons": [
+    { "src": "/logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

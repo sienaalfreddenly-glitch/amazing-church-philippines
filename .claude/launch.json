@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "amazing-church-dev",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "npm run dev"],
+      "cwd": "D:\\Test\\amazing-church",
+      "port": 3000
+    }
+  ]
+}
