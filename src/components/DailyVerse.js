@@ -1,16 +1,27 @@
 import { getSessionAndProfile } from '@/lib/supabase-server';
 import { fetchDailyVerse } from '@/lib/bible';
 
+const TZ = 'Asia/Manila';
+
+// YYYY-MM-DD in Manila (rolls over at 12 midnight PHT, GMT+8)
+function manilaDateKey() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date());
+}
+
 export default async function DailyVerse() {
   const { user } = await getSessionAndProfile();
-  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD UTC
+  const today = manilaDateKey();                                  // e.g. "2026-07-21"
   const seed = user ? `${user.id}:${today}` : `guest:${today}`;
 
   let verse;
   try { verse = await fetchDailyVerse(seed); } catch { verse = null; }
   if (!verse) return null;
 
-  const prettyDate = new Date().toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
+  const prettyDate = new Intl.DateTimeFormat('en-US', {
+    timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric',
+  }).format(new Date());
 
   return (
     <section className="relative overflow-hidden rounded-3xl px-6 sm:px-10 py-10 sm:py-12 text-center animate-fade-up shadow-soft"

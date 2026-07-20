@@ -7,6 +7,8 @@ import Tilt3D from '@/components/Tilt3D';
 import { IconChat, IconCamera, IconCalendar, IconUsers, IconMapPin, IconInbox, IconArrow } from '@/components/Icons';
 import { createClient } from '@/lib/supabase-server';
 
+// Re-render at least every minute so the Daily Verse rolls over promptly
+// after midnight Asia/Manila (GMT+8).
 export const revalidate = 60;
 
 export default async function Home() {
