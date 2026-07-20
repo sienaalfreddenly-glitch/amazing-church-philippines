@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 
+const NGROK_BYPASS = { 'ngrok-skip-browser-warning': 'true' };
+
 export async function middleware(request) {
   let response = NextResponse.next({ request });
   const supabase = createServerClient(
@@ -15,6 +17,7 @@ export async function middleware(request) {
           list.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
         },
       },
+      global: { headers: NGROK_BYPASS },
     }
   );
   const { data: { user } } = await supabase.auth.getUser();

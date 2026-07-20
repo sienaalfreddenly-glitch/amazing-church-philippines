@@ -2,6 +2,8 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { createClient as createSbClient } from '@supabase/supabase-js';
 
+const NGROK_BYPASS = { 'ngrok-skip-browser-warning': 'true' };
+
 export function createClient() {
   const cookieStore = cookies();
   return createServerClient(
@@ -15,6 +17,7 @@ export function createClient() {
           catch { /* Server Component; ignore */ }
         },
       },
+      global: { headers: NGROK_BYPASS },
     }
   );
 }
@@ -25,7 +28,10 @@ export function createAdminClient() {
   return createSbClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY,
-    { auth: { autoRefreshToken: false, persistSession: false } }
+    {
+      auth: { autoRefreshToken: false, persistSession: false },
+      global: { headers: NGROK_BYPASS },
+    }
   );
 }
 
