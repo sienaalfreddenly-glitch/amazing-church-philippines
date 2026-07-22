@@ -536,9 +536,38 @@ create policy "recipient marks read" on public.messages
   for update using (recipient_id = auth.uid())
   with check (recipient_id = auth.uid());
 
--- Post media (images + videos) is stored on the local filesystem
--- via /api/upload → public/uploads/…, not Supabase Storage.
--- If a legacy bucket exists, we leave it alone; no policies here.
+-- =========================================================
+-- Storage bucket for post + news + hero media (images + short videos)
+-- Uploads go through Supabase Storage because Vercel's serverless
+-- filesystem is read-only. This still runs in local Docker (no Cloud
+-- Storage quota used).
+-- =========================================================
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+  values ('post-media', 'post-media', true, 52428800,
+          array['image/png','image/jpeg','image/gif','image/webp','video/mp4','video/webm','video/quicktime'])
+  on conflict (id) do update set
+    public = excluded.public,
+    file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "post-media public read" on storage.objects;
+create policy "post-media public read" on storage.objects
+  for select using (bucket_id = 'post-media');
+
+drop policy if exists "post-media upload own folder" on storage.objects;
+create policy "post-media upload own folder" on storage.objects
+  for insert with check (
+    bucket_id = 'post-media' and auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+drop policy if exists "post-media delete own folder" on storage.objects;
+create policy "post-media delete own folder" on storage.objects
+  for delete using (
+    bucket_id = 'post-media' and (
+      auth.uid()::text = (storage.foldername(name))[1]
+      or public.is_admin()
+    )
+  );
 
 -- =========================================================
 -- Notification triggers (SECURITY DEFINER so users can only insert
