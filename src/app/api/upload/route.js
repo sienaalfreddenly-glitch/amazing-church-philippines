@@ -37,6 +37,8 @@ export async function POST(req) {
     .upload(path, file, { contentType: type, upsert: false, cacheControl: '3600' });
   if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
 
-  const { data: pub } = supabase.storage.from('post-media').getPublicUrl(path);
-  return NextResponse.json({ url: pub.publicUrl });
+  // Return a same-origin proxy URL rather than the ngrok public URL directly.
+  // The proxy at /api/media/... injects the ngrok-skip header so browsers
+  // load the file instead of ngrok's HTML interstitial.
+  return NextResponse.json({ url: `/api/media/post-media/${path}` });
 }
