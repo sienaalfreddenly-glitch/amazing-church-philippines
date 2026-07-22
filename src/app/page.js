@@ -32,15 +32,18 @@ export default async function Home() {
             <Tilt3D max={10} scale={1.03} className="inline-block">
               <Image src="/logo.png" alt="Amazing Church Philippines"
                 width={720} height={288} priority
-                className="w-full max-w-[560px] h-auto animate-floaty drop-shadow-xl" />
+                className="w-full max-w-[560px] h-auto animate-floaty"
+                style={{ filter: 'drop-shadow(0 4px 14px rgba(0,0,0,0.35))' }} />
             </Tilt3D>
-            <span className="mt-6 inline-block rounded-full bg-white/70 backdrop-blur px-4 py-1.5 text-xs font-semibold tracking-[0.3em] uppercase text-brand shadow-soft border border-brand/10">
+            <span className="mt-6 inline-block rounded-full bg-white/85 backdrop-blur px-4 py-1.5 text-xs font-semibold tracking-[0.3em] uppercase text-brand shadow-soft border border-brand/10">
               Welcome Home
             </span>
-            <h1 className="font-display text-3xl sm:text-5xl mt-4 leading-tight text-ink">
+            <h1 className="font-display text-3xl sm:text-5xl mt-4 leading-tight text-ink"
+              style={{ textShadow: '0 2px 12px rgba(255,255,255,0.9), 0 1px 2px rgba(255,255,255,0.7)' }}>
               Amazing Church <span className="text-brand">Philippines</span>
             </h1>
-            <p className="mt-4 text-ink/70 max-w-2xl text-base sm:text-lg">
+            <p className="mt-4 text-ink max-w-2xl text-base sm:text-lg"
+              style={{ textShadow: '0 1px 6px rgba(255,255,255,0.85)' }}>
               A gathering place for our community — join discussions, share what God is doing in your life,
               and stay connected to every service, event, and livestream.
             </p>

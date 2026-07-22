@@ -30,14 +30,21 @@ export default function HeroSlideshow({ intervalMs = 5000 }) {
           className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === i ? 'opacity-100' : 'opacity-0'}`}>
           <img src={s.image_url} alt={s.caption || ''}
             className="w-full h-full object-cover"
-            style={{ opacity: 0.35 }} />
+            style={{ opacity: 0.85 }} />
         </div>
       ))}
-      {/* Additional wash so the hero text stays crisp regardless of the image */}
-      <div className="absolute inset-0"
+      {/* Soft radial + gradient wash — light around the center where the hero
+          content sits so the logo & headline stay legible, letting the picture
+          breathe elsewhere. */}
+      <div className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'linear-gradient(135deg, rgba(255,255,255,0.75) 0%, rgba(251,250,247,0.75) 60%, rgba(122,31,43,0.10) 100%)',
+            'radial-gradient(ellipse at center, rgba(251,250,247,0.75) 0%, rgba(251,250,247,0.35) 40%, rgba(251,250,247,0.15) 100%)',
+        }} />
+      <div className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            'linear-gradient(180deg, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0) 30%, rgba(255,255,255,0) 70%, rgba(122,31,43,0.10) 100%)',
         }} />
     </div>
   );
