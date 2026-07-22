@@ -30,7 +30,7 @@ export default function HeroSlideshow({ intervalMs = 5000 }) {
           className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === i ? 'opacity-100' : 'opacity-0'}`}>
           <img src={s.image_url} alt={s.caption || ''}
             className="w-full h-full object-cover"
-            style={{ opacity: 0.50 }} />
+            style={{ opacity: 0.40 }} />
         </div>
       ))}
       {/* Soft radial + gradient wash — light around the center where the hero
