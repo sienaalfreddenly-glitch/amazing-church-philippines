@@ -109,6 +109,34 @@ create table if not exists public.events (
 -- Bible verses are now fetched live from bible-api.com; local table no longer needed.
 drop table if exists public.bible_verses;
 
+-- =========================================================
+-- News & Updates (admin-authored posts, everyone can read)
+-- =========================================================
+create table if not exists public.news_posts (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  body text not null,
+  media_urls text[] not null default '{}',    -- uploaded photos/videos
+  video_url text,                              -- optional external video (YouTube / FB)
+  author_id uuid references public.profiles(id) on delete set null,
+  published_at timestamptz not null default now(),
+  created_at timestamptz not null default now()
+);
+create index if not exists news_posts_published_idx on public.news_posts (published_at desc);
+
+-- =========================================================
+-- Hero slideshow images (behind the home page "Welcome home" hero)
+-- =========================================================
+create table if not exists public.hero_slides (
+  id uuid primary key default gen_random_uuid(),
+  image_url text not null,
+  caption text,
+  ord int not null default 1,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+create index if not exists hero_slides_ord_idx on public.hero_slides (ord);
+
 create table if not exists public.live_series (
   id uuid primary key default gen_random_uuid(),
   title text not null unique,
@@ -288,6 +316,23 @@ alter table public.courses enable row level security;
 alter table public.course_lessons enable row level security;
 alter table public.lesson_completions enable row level security;
 alter table public.enrollments enable row level security;
+alter table public.news_posts enable row level security;
+alter table public.hero_slides enable row level security;
+
+drop policy if exists "everyone reads news" on public.news_posts;
+create policy "everyone reads news" on public.news_posts
+  for select using (true);
+drop policy if exists "admins manage news" on public.news_posts;
+create policy "admins manage news" on public.news_posts
+  for all using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists "everyone reads hero slides" on public.hero_slides;
+create policy "everyone reads hero slides" on public.hero_slides
+  for select using (is_active or public.is_admin());
+drop policy if exists "admins manage hero slides" on public.hero_slides;
+create policy "admins manage hero slides" on public.hero_slides
+  for all using (public.is_admin()) with check (public.is_admin());
+
 alter table public.notifications enable row level security;
 alter table public.messages enable row level security;
 

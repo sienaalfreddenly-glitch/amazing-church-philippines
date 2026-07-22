@@ -9,6 +9,7 @@ export default function Navbar({ profile }) {
   const isMember = profile?.account_status === 'approved';
   const links = isMember ? [
     { href: '/', label: 'Home' },
+    { href: '/news', label: 'News' },
     { href: '/feed', label: 'Feed' },
     { href: '/discussions', label: 'Discussions' },
     { href: '/leaders', label: 'Leaders' },
@@ -17,6 +18,7 @@ export default function Navbar({ profile }) {
     { href: '/live', label: 'Live' },
   ] : [
     { href: '/', label: 'Home' },
+    { href: '/news', label: 'News' },
     { href: '/events', label: 'Events' },
     { href: '/live', label: 'Live' },
   ];

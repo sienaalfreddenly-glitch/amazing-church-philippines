@@ -7,15 +7,25 @@ import { IconVideo } from '@/components/Icons';
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Live — Amazing Church Philippines' };
 
+// Convert a share URL into an embeddable player URL.
+// - Facebook: needs the canonical Page-video permalink; share links (fb.watch, /share/…) won't embed.
+// - YouTube: supports watch/short/embed/youtu.be/live variants.
 function fbEmbedUrl(url) {
   if (!url) return null;
-  if (/^https?:\/\/(www\.)?facebook\.com/.test(url)) {
-    return 'https://www.facebook.com/plugins/video.php?href=' + encodeURIComponent(url) + '&show_text=false';
-  }
+
+  // YouTube — most reliable across variants
   if (/(youtu\.be|youtube\.com)/.test(url)) {
-    const id = url.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([\w-]{6,})/)?.[1];
+    const id = url.match(/(?:v=|youtu\.be\/|shorts\/|embed\/|live\/)([\w-]{6,})/)?.[1];
     return id ? `https://www.youtube.com/embed/${id}` : null;
   }
+
+  // Facebook Page video permalinks
+  if (/^https?:\/\/(www\.|web\.|m\.)?facebook\.com/.test(url)) {
+    // Normalize m./web. → www.
+    const normalized = url.replace(/^https?:\/\/(?:m|web)\.facebook\.com/, 'https://www.facebook.com');
+    return 'https://www.facebook.com/plugins/video.php?href=' + encodeURIComponent(normalized) + '&show_text=false&width=560';
+  }
+
   return url;
 }
 
@@ -117,7 +127,12 @@ export default async function Live() {
                 </div>
                 <div>
                   <label className="label">Video URL</label>
-                  <input className="input" name="video_url" required placeholder="Facebook / YouTube URL" />
+                  <input className="input" name="video_url" required placeholder="Facebook Page video permalink or YouTube URL" />
+                  <p className="text-[11px] text-ink/50 mt-1">
+                    Facebook embeds only work for videos posted from a Page. Use the video's canonical URL
+                    (<code>facebook.com/&lt;PageName&gt;/videos/&lt;id&gt;</code>) — <em>not</em> a share/fb.watch link.
+                    YouTube works out of the box.
+                  </p>
                 </div>
                 <div>
                   <label className="label">Date</label>
@@ -178,7 +193,7 @@ export default async function Live() {
                         <h4 className="text-lg mt-1 leading-snug">{v.title}</h4>
                         <div className="mt-3 flex items-center justify-between text-sm">
                           <a href={v.video_url} target="_blank" rel="noreferrer"
-                            className="text-brand hover:underline">Open on source ↗</a>
+                            className="text-brand hover:underline">Watch on Facebook / YouTube ↗</a>
                           {canManage && <ConfirmDeleteLiveButton id={v.id} />}
                         </div>
                       </div>

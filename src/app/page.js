@@ -3,6 +3,7 @@ import Image from 'next/image';
 import FacebookEmbed from '@/components/FacebookEmbed';
 import DailyVerse from '@/components/DailyVerse';
 import HeroParallax from '@/components/HeroParallax';
+import HeroSlideshow from '@/components/HeroSlideshow';
 import Tilt3D from '@/components/Tilt3D';
 import { IconChat, IconCamera, IconCalendar, IconUsers, IconMapPin, IconInbox, IconArrow } from '@/components/Icons';
 import { createClient } from '@/lib/supabase-server';
@@ -21,11 +22,12 @@ export default async function Home() {
     <div className="space-y-14">
       {/* Hero */}
       <HeroParallax>
-        <section className="relative text-center px-6 sm:px-10 py-16 sm:py-20 animate-fade-up bg-brand-flow"
+        <section className="relative text-center px-6 sm:px-10 py-16 sm:py-20 animate-fade-up bg-brand-flow overflow-hidden"
           style={{
             backgroundImage:
               'linear-gradient(135deg, #FFFFFF 0%, #FBFAF7 60%, rgba(122,31,43,0.05) 100%)',
           }}>
+          <HeroSlideshow />
           <div className="relative z-10 flex flex-col items-center">
             <Tilt3D max={10} scale={1.03} className="inline-block">
               <Image src="/logo.png" alt="Amazing Church Philippines"

@@ -25,7 +25,15 @@ export default async function AdminHome() {
           <h1 className="text-3xl">Moderation</h1>
           <p className="text-ink/60 text-sm">Signed in as {profile.full_name} · {profile.role.replace('_',' ')}</p>
         </div>
-        {isAdmin(profile.role) && <Link href="/admin/users" className="btn-primary">Manage users</Link>}
+        {isAdmin(profile.role) && (
+          <div className="flex flex-wrap gap-2">
+            <Link href="/admin/users" className="btn-primary">Manage users</Link>
+            <Link href="/admin/news" className="btn-outline">News & Updates</Link>
+            <Link href="/admin/hero-slides" className="btn-outline">Hero slideshow</Link>
+            <Link href="/admin/courses" className="btn-outline">Courses</Link>
+            <Link href="/admin/events" className="btn-outline">Events</Link>
+          </div>
+        )}
       </div>
 
       {isAdmin(profile.role) && (
