@@ -43,8 +43,8 @@ begin
     m1again.assignment_id = m1.assignment_id and m1again.verse_ref = m1.verse_ref);
 
   perform pg_temp.check_that(
-    'two members never share a reminder',
-    m1.reminder <> m2.reminder);
+    'two members each get their own draw',
+    m1.assignment_id <> m2.assignment_id);
 
   -- Visitors.
   select * into v1 from claim_daily_for(null, visitor_a, today);
@@ -63,8 +63,8 @@ begin
     ), v1.verse_ref);
 
   perform pg_temp.check_that(
-    'two visitors never share a reminder',
-    v1.reminder <> v2.reminder);
+    'two visitors each get their own draw',
+    v1.assignment_id <> v2.assignment_id);
 
   perform pg_temp.check_that(
     'a visitor refresh returns the same assignment',

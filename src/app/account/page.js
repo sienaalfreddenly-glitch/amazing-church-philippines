@@ -63,12 +63,17 @@ export default function Account() {
       cacheControl: '3600', upsert: true, contentType: file.type,
     });
     if (upErr) { setUploading(false); setErr(upErr.message); return; }
-    const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
+    // Store a path through our own media route rather than the absolute URL
+    // Supabase returns. getPublicUrl builds that URL from whatever address this
+    // browser was configured with, which on a dev machine is 127.0.0.1. Saved
+    // literally, the photo then fails to load on every other device, because
+    // 127.0.0.1 means whichever machine is doing the looking.
+    const avatarPath = `/api/media/avatars/${path}`;
     const { error: saveErr } = await supabase.from('profiles')
-      .update({ avatar_url: pub.publicUrl }).eq('id', profile.id);
+      .update({ avatar_url: avatarPath }).eq('id', profile.id);
     setUploading(false);
     if (saveErr) return setErr(saveErr.message);
-    setProfile({ ...profile, avatar_url: pub.publicUrl });
+    setProfile({ ...profile, avatar_url: avatarPath });
     setMsg('Profile photo updated.');
     router.refresh();
   }

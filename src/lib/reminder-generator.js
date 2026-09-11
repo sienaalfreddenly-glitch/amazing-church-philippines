@@ -21,8 +21,10 @@
 
 const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
 
-// Flash is on the free tier and is more than capable of a short reflection.
-const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+// Flash sits on the free tier and is more than capable of a short reflection.
+// Google retires older Flash versions for new projects, so this tracks the
+// current one; override with GEMINI_MODEL if a specific version is wanted.
+const MODEL = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
 
 /** Words that assume something about the reader's life. */
 const ROLE_WORDS = /\b(parent|parents|mother|father|mum|dad|student|students|employee|employees|husband|wife|spouse|teenager|your kids|your children|your job|your boss|your marriage|your career)\b/i;
@@ -102,7 +104,12 @@ export async function generateReminder({ reference, verseText, signal }) {
         contents: [{ parts: [{ text: buildPrompt(reference, verseText) }] }],
         generationConfig: {
           temperature: 1.0,   // Variety matters more than precision here.
-          maxOutputTokens: 400,
+          // Gemini 3 reasons before answering and draws that from the same
+          // budget, so a ceiling sized for the visible text alone is spent on
+          // thinking and the call ends as MAX_TOKENS with nothing written.
+          // Turning thinking off outright is rejected by this model, so the
+          // ceiling is simply generous instead.
+          maxOutputTokens: 2048,
         },
         // The verse itself can be violent or distressing, and a safety filter
         // tuned for chat will refuse to discuss it. These are set to block only

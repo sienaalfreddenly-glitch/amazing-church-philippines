@@ -6,15 +6,15 @@ const TZ = 'Asia/Manila';
 /**
  * Daily Bible Verse.
  *
- * Exactly two sections: the verse, and Today's Reminder. No lesson, no prayer.
+ * The verse and nothing else.
  *
- * Everyone gets their own draw. There is no global verse of the day, so two
- * readers may hold the same verse today, but never the same reminder. Members
- * draw from the whole imported Bible; visitors only from verses tagged with the
- * welcoming themes, because somebody's first encounter with this church should
- * not be a random passage from Judges.
+ * Everyone gets their own draw, and there is no global verse of the day, so two
+ * readers may hold the same verse today. Members draw from the whole imported
+ * Bible; visitors only from verses tagged with the welcoming themes, because
+ * somebody's first encounter with this church should not be a random passage
+ * from Judges.
  *
- * Nothing is chosen here. The database claims the pairing and returns the same
+ * Nothing is chosen here. The database claims the verse and returns the same
  * one on every refresh, so a reload cannot change what a reader sees.
  */
 export default async function DailyVerse() {
@@ -87,21 +87,10 @@ export default async function DailyVerse() {
           }`}>
             &ldquo;{entry.verse_text}&rdquo;
           </p>
-          <cite className="mt-5 block text-sm font-semibold not-italic tracking-[0.06em] text-gilt-light">
+          <cite className="mt-6 block text-sm font-semibold not-italic tracking-[0.06em] text-gilt-light">
             {entry.verse_ref}
           </cite>
         </blockquote>
-
-        <hr className="gilt-rule mx-auto mt-9 w-24" />
-
-        <div className="mx-auto mt-8 max-w-prose">
-          <h3 className="text-[11px] font-semibold uppercase tracking-[0.28em] text-gilt-light/80">
-            Today&apos;s Reminder
-          </h3>
-          <p className="mt-4 text-left leading-relaxed text-white/85 sm:text-center">
-            {entry.reminder}
-          </p>
-        </div>
       </div>
     </section>
   );
