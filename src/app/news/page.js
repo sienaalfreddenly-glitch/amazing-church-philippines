@@ -31,8 +31,11 @@ export default async function NewsPage() {
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl">News & Updates</h1>
-          <p className="text-ink/60 text-sm">The latest from Amazing Church Philippines.</p>
+          <p className="gilt-text text-[11px] font-semibold uppercase tracking-[0.3em]">Announcements</p>
+          <h1 className="mt-3 text-4xl sm:text-5xl">News</h1>
+          <p className="mt-4 max-w-prose text-ink/65">
+            What is happening at Amazing Church, and anything you need to know before Sunday.
+          </p>
         </div>
         {isAdmin(profile?.role) && (
           <Link href="/admin/news" className="btn-outline text-xs">Manage</Link>

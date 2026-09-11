@@ -51,9 +51,9 @@ export default async function MinistriesPage() {
           <p className="gilt-text text-[11px] font-semibold uppercase tracking-[0.3em]">Serve</p>
           <h1 className="mt-3 text-4xl sm:text-5xl">Ministries</h1>
           <p className="mt-4 text-ink/65">
-            Every one of these teams is short of people, and none of them need you to be
-            impressive. If something here stirs you, put your hand up and a leader will talk
-            it through with you.
+            Every one of these teams could use more hands, and none of them need you to be
+            impressive. If one of them sounds like you, say so and a leader will have a
+            proper chat with you about it. Saying you are interested is not a commitment.
           </p>
           <hr className="gilt-rule mt-6" />
         </header>

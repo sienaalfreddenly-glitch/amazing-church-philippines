@@ -15,7 +15,13 @@ export default async function Events() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl">Events</h1>
+        <div>
+          <p className="gilt-text text-[11px] font-semibold uppercase tracking-[0.3em]">What is on</p>
+          <h1 className="mt-3 text-4xl sm:text-5xl">Events</h1>
+          <p className="mt-4 max-w-prose text-ink/65">
+            Services, outreach, and everything else worth turning up to.
+          </p>
+        </div>
         {isStaff(profile?.role) && <Link href="/admin/events" className="btn-primary">Manage events</Link>}
       </div>
       <div className="grid md:grid-cols-2 gap-4">

@@ -34,8 +34,12 @@ export default async function Discussions() {
   return (
     <div className="max-w-2xl mx-auto space-y-5">
       <div className="text-center">
-        <h1 className="text-3xl">Discussions</h1>
-        <p className="text-ink/60 text-sm">Ask, share, and grow together in faith.</p>
+        <p className="gilt-text text-[11px] font-semibold uppercase tracking-[0.3em]">Ask anything</p>
+        <h1 className="mt-3 text-4xl sm:text-5xl">Discussions</h1>
+        <p className="mt-4 max-w-prose text-ink/65">
+          Bring the question you have been carrying around. Nobody here expects you to have
+          it all worked out, and no question is too basic to ask.
+        </p>
       </div>
 
       {user && isApproved(profile) && <PostComposer kind="discussion" />}

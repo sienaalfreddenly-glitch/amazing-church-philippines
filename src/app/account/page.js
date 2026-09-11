@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase-browser';
 import { useRouter } from 'next/navigation';
 import Avatar from '@/components/Avatar';
 import SocialLinks from '@/components/SocialLinks';
+import NotificationMutes from '@/components/NotificationMutes';
 
 export default function Account() {
   const supabase = createClient();
@@ -234,6 +235,13 @@ export default function Account() {
         {err && <p className="text-sm text-red-700">{err}</p>}
         <button disabled={saving} className="btn-primary">{saving ? 'Saving…' : 'Save changes'}</button>
       </form>
+
+      <section className="card">
+        <h2 className="text-xl">Notifications</h2>
+        <div className="mt-3">
+          <NotificationMutes myId={profile.id} />
+        </div>
+      </section>
     </div>
   );
 }

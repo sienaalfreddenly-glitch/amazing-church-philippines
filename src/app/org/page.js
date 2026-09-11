@@ -5,8 +5,8 @@ import { createClient } from '@/lib/supabase-server';
 import { getSessionAndProfile } from '@/lib/supabase-server';
 
 export const metadata = {
-  title: 'Organisation chart',
-  description: 'Who leads what at Amazing Church Philippines, and who they care for.',
+  title: 'The household',
+  description: 'Who cares for whom at Amazing Church Philippines.',
 };
 
 /**
@@ -60,7 +60,7 @@ function Node({ person, depth = 0 }) {
           )}
           {hasReports && (
             <p className="nums mt-0.5 text-xs text-ink/40">
-              {person.reports.length} {person.reports.length === 1 ? 'member' : 'members'}
+              cares for {person.reports.length}
             </p>
           )}
         </div>
@@ -83,9 +83,9 @@ export default async function OrgChartPage() {
   if (!profile || profile.account_status !== 'approved') {
     return (
       <section className="mx-auto max-w-md py-16 text-center">
-        <h1 className="text-3xl">Organisation chart</h1>
+        <h1 className="text-3xl">The household</h1>
         <p className="mx-auto mt-4 max-w-prose text-ink/65">
-          The chart is for approved members. Sign in to see who leads what.
+          This is for members of the church. Sign in to see who cares for whom.
         </p>
         <Link href="/login" className="btn-primary mt-8">Sign in</Link>
       </section>
@@ -100,11 +100,27 @@ export default async function OrgChartPage() {
     <div className="space-y-10">
       <Reveal>
         <header>
-          <h1 className="text-4xl sm:text-5xl">Organisation chart</h1>
-          <p className="mt-3 max-w-prose text-ink/65">
-            Who leads what, and who they care for. Built from the leader each member is
-            assigned, so it stays true as people are assigned and reassigned.
+          <p className="gilt-text text-[11px] font-semibold uppercase tracking-[0.3em]">
+            The household of God
           </p>
+
+          <h1 className="mt-3 text-4xl sm:text-5xl">Who cares for whom</h1>
+
+          <blockquote className="mt-5 border-l-2 border-gilt/60 pl-4">
+            <p className="max-w-prose font-display text-lg leading-snug text-ink/80">
+              So we, being many, are one body in Christ, and every one members one of another.
+            </p>
+            <cite className="mt-1.5 block text-xs font-semibold not-italic tracking-wide text-brand">
+              Romans 12:5
+            </cite>
+          </blockquote>
+
+          <p className="mt-5 max-w-prose text-ink/65">
+            This is not a ranking. It is simply who has agreed to look out for whom, so that
+            nobody in this church is left without someone who knows their name. If your name
+            sits under someone, that is the person to go to first.
+          </p>
+
           <hr className="gilt-rule mt-6" />
         </header>
       </Reveal>
@@ -121,7 +137,7 @@ export default async function OrgChartPage() {
         <div className="card card-static py-12 text-center text-ink/60">
           <p className="font-medium text-ink/75">Nobody to show yet</p>
           <p className="mx-auto mt-1 max-w-xs text-sm">
-            The chart fills in as members are approved and assigned to a leader.
+            This fills in as members are approved and a leader takes them on.
           </p>
         </div>
       )}

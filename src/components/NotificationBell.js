@@ -14,6 +14,10 @@ const KIND_TEXT = {
   // Sent to every leader when someone signs up without choosing one.
   unassigned_member: 'signed up without a leader',
   ministry_interest: 'is interested in',
+  new_post:       'posted',
+  new_discussion: 'started a discussion',
+  new_news:       'posted an update',
+  new_event:      'added an event',
 };
 
 function linkFor(n) {
@@ -26,6 +30,8 @@ function linkFor(n) {
   // themselves or someone else.
   if (n.entity_type === 'profile')    return `/admin/users`;
   if (n.entity_type === 'ministry')   return `/ministries`;
+  if (n.entity_type === 'news')       return `/news`;
+  if (n.entity_type === 'event')      return `/events`;
   return '#';
 }
 
@@ -101,6 +107,7 @@ export default function NotificationBell() {
     else if (n.kind === 'mention')    suffix = ` ${n.entity_type}`;
     else if (n.kind === 'unassigned_member') suffix = '';
     else if (n.kind === 'ministry_interest') suffix = ` ${n.metadata?.ministry || 'a ministry'}`;
+    else if (n.kind?.startsWith('new_')) suffix = n.metadata?.title ? `: ${n.metadata.title}` : '';
     return `${who} ${verb}${suffix}`;
   }
 

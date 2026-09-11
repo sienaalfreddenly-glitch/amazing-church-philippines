@@ -30,7 +30,7 @@ export default function Navbar({ profile }) {
         { href: '/news', label: 'News' },
         { href: '/courses', label: 'Courses' },
         { href: '/leaders', label: 'Leaders' },
-        { href: '/org', label: 'Org chart' },
+        { href: '/org', label: 'Our household' },
       ]
     : [
         { href: '/news', label: 'News' },

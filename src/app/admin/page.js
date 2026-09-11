@@ -22,8 +22,11 @@ export default async function AdminHome() {
     <div className="space-y-10">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl">Moderation</h1>
-          <p className="text-ink/60 text-sm">Signed in as {profile.full_name} · {profile.role.replace('_',' ')}</p>
+          <p className="gilt-text text-[11px] font-semibold uppercase tracking-[0.3em]">Behind the scenes</p>
+          <h1 className="mt-3 text-4xl sm:text-5xl">Moderation</h1>
+          <p className="mt-3 text-sm text-ink/55">
+            Signed in as {profile.full_name} · {profile.role.replace('_',' ')}
+          </p>
         </div>
         {isAdmin(profile.role) && (
           <div className="flex flex-wrap gap-2">

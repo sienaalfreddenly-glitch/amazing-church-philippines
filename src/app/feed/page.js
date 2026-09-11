@@ -34,8 +34,12 @@ export default async function Feed() {
   return (
     <div className="max-w-2xl mx-auto space-y-5">
       <div className="text-center">
-        <h1 className="text-3xl">Community Feed</h1>
-        <p className="text-ink/60 text-sm">Testimonies, praises, and moments from our church family.</p>
+        <p className="gilt-text text-[11px] font-semibold uppercase tracking-[0.3em]">Together</p>
+        <h1 className="mt-3 text-4xl sm:text-5xl">Feed</h1>
+        <p className="mt-4 max-w-prose text-ink/65">
+          Answered prayers, hard weeks, small wins. Post whatever God is doing in your life,
+          and read what he is doing in someone else&apos;s.
+        </p>
       </div>
 
       {user && isApproved(profile) && <PostComposer kind="post" />}

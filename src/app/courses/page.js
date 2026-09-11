@@ -44,8 +44,12 @@ export default async function CoursesPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-8">
       <div className="text-center">
-        <h1 className="text-3xl">Courses</h1>
-        <p className="text-ink/60 text-sm">Discipleship tracks and training programs.</p>
+        <p className="gilt-text text-[11px] font-semibold uppercase tracking-[0.3em]">Grow</p>
+        <h1 className="mt-3 text-4xl sm:text-5xl">Courses</h1>
+        <p className="mt-4 max-w-prose text-ink/65">
+          Work through the basics of the faith at your own pace, with a leader checking in
+          as you go. Start wherever you actually are.
+        </p>
       </div>
 
       <div className="card"

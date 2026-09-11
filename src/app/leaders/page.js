@@ -43,8 +43,12 @@ export default async function LeadersPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl">Organizational Chart</h1>
-        <p className="text-ink/60">Leaders and their Disciples.</p>
+        <p className="gilt-text text-[11px] font-semibold uppercase tracking-[0.3em]">Shepherds</p>
+        <h1 className="mt-3 text-4xl sm:text-5xl">Leaders</h1>
+        <p className="mt-4 max-w-prose text-ink/65">
+          The people who have taken responsibility for looking after others here. If you do
+          not have one yet, any of them will point you to the right person.
+        </p>
       </div>
 
       {leadersList.length === 0 && (

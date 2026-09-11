@@ -58,9 +58,11 @@ export default async function Live() {
   return (
     <div className="space-y-10">
       <div className="text-center">
-        <h1 className="text-3xl">Watch Live</h1>
-        <p className="text-ink/60 mt-2">
-          When we go live on Facebook, the stream appears here automatically.
+        <p className="gilt-text text-[11px] font-semibold uppercase tracking-[0.3em]">Sundays</p>
+        <h1 className="mt-3 text-4xl sm:text-5xl">Watch live</h1>
+        <p className="mt-4 max-w-prose text-ink/65">
+          The stream turns up here on its own once the service starts. If you cannot be in
+          the room, you can still be with us.
         </p>
       </div>
       <FacebookEmbed tabs="timeline" height={680} showLive />
