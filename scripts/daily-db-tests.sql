@@ -105,24 +105,24 @@ begin
 
   blocked := false;
   begin
-    insert into daily_reminders (verse_id, reminder, theme)
-    select id, 'far too short to be a reminder', 'God''s love' from daily_verses limit 1;
+    insert into daily_reminders (reminder, theme)
+    values ('far too short to be a reminder', 'God''s love');
   exception when check_violation then blocked := true;
   end;
   perform pg_temp.check_that('a reminder outside 50 to 90 words is rejected', blocked);
 
   blocked := false;
   begin
-    insert into daily_reminders (verse_id, reminder, theme)
-    select id, repeat('word ', 59) || 'and — a dash', 'God''s love' from daily_verses limit 1;
+    insert into daily_reminders (reminder, theme)
+    values (repeat('word ', 59) || 'and — a dash', 'God''s love');
   exception when check_violation then blocked := true;
   end;
   perform pg_temp.check_that('a reminder containing an em dash is rejected', blocked);
 
   blocked := false;
   begin
-    insert into daily_reminders (verse_id, reminder, theme)
-    select id, repeat('word ', 59) || 'and an emoji 🙏', 'God''s love' from daily_verses limit 1;
+    insert into daily_reminders (reminder, theme)
+    values (repeat('word ', 59) || 'and an emoji 🙏', 'God''s love');
   exception when check_violation then blocked := true;
   end;
   perform pg_temp.check_that('a reminder containing an emoji is rejected', blocked);
@@ -130,9 +130,9 @@ begin
   -- A near-identical reminder must be refused, not merely an exact copy.
   blocked := false;
   begin
-    insert into daily_reminders (verse_id, reminder, theme)
-    select verse_id, replace(reminder, 'really', 'truly'), theme
-    from daily_reminders where reminder like '%really noticed you%' limit 1;
+    insert into daily_reminders (reminder, theme)
+    select replace(reminder, 'harder on yourself', 'tougher on yourself'), theme
+    from daily_reminders where reminder like '%harder on yourself%' limit 1;
   exception when unique_violation then blocked := true;
   end;
   perform pg_temp.check_that('a lightly reworded reminder is rejected as too similar', blocked);
@@ -140,56 +140,63 @@ end $$;
 
 -- ---------------------------------------------------------------------------
 -- The rule this model exists for: a verse that comes round again must arrive
--- with a different reminder, never the same words twice.
+-- with a different reminder, and no reader ever sees the same reminder twice.
 do $$
 declare
-  v_id      uuid;
-  first_r   uuid;  first_text  text;
-  second_r  uuid;  second_text text;
-  blocked   boolean := false;
+  v_id     uuid;
+  r_one    uuid; text_one text;
+  r_two    uuid; text_two text;
+  blocked  boolean := false;
 begin
-  -- A verse that still has at least two unspent reminders, so the test is
-  -- about the rule rather than about how much pool earlier blocks consumed.
-  select r.verse_id into v_id
-  from daily_reminders r
-  where not exists (select 1 from daily_assignments a where a.reminder_id = r.id)
-  group by r.verse_id having count(*) >= 2
-  limit 1;
+  select id into v_id from daily_verses where devotional order by random() limit 1;
 
-  if v_id is null then
-    perform pg_temp.check_that('the same verse a second time carries a different reminder',
-      false, 'no verse had two unspent reminders');
-    return;
-  end if;
-
-  select dr.id, dr.reminder into first_r, first_text from daily_reminders dr
-  where dr.verse_id = v_id
-    and not exists (select 1 from daily_assignments a where a.reminder_id = dr.id)
+  select dr.id, dr.reminder into r_one, text_one
+  from daily_reminders dr
+  where not exists (select 1 from daily_assignments a where a.reminder_id = dr.id)
   limit 1;
 
   insert into daily_assignments (user_id, verse_id, reminder_id, assigned_on, theme)
-  values ('d1111111-1111-1111-1111-111111111111', v_id, first_r, date '2097-03-01', 'test');
+  values ('d1111111-1111-1111-1111-111111111111', v_id, r_one, date '2097-03-01', 'test');
 
-  select dr.id, dr.reminder into second_r, second_text from daily_reminders dr
-  where dr.verse_id = v_id
-    and not exists (select 1 from daily_assignments a where a.reminder_id = dr.id)
+  select dr.id, dr.reminder into r_two, text_two
+  from daily_reminders dr
+  where dr.id <> r_one
+    and not exists (select 1 from daily_assignments a
+                    where a.verse_id = v_id and a.reminder_id = dr.id)
   limit 1;
 
   insert into daily_assignments (user_id, verse_id, reminder_id, assigned_on, theme)
-  values ('d2222222-2222-2222-2222-222222222222', v_id, second_r, date '2097-03-02', 'test');
+  values ('d2222222-2222-2222-2222-222222222222', v_id, r_two, date '2097-03-02', 'test');
 
   perform pg_temp.check_that(
     'the same verse a second time carries a different reminder',
-    second_text is not null and second_text <> first_text);
+    text_two is not null and text_two <> text_one);
 
-  -- The database refuses to spend a reminder twice, whatever the caller does.
+  -- The same pairing can never happen twice.
   begin
     insert into daily_assignments (user_id, verse_id, reminder_id, assigned_on, theme)
-    values ('d3333333-3333-3333-3333-333333333333', v_id, first_r, date '2097-03-03', 'test');
+    values ('d3333333-3333-3333-3333-333333333333', v_id, r_one, date '2097-03-03', 'test');
   exception when unique_violation then blocked := true;
   end;
+  perform pg_temp.check_that('the same verse and reminder pairing cannot repeat', blocked);
 
-  perform pg_temp.check_that('a reminder can never be used twice', blocked);
+  -- And a reader never sees the same reminder twice, even under a new verse.
+  blocked := false;
+  begin
+    insert into daily_assignments (user_id, verse_id, reminder_id, assigned_on, theme)
+    select 'd1111111-1111-1111-1111-111111111111', id, r_one, date '2097-03-04', 'test'
+    from daily_verses where id <> v_id and devotional limit 1;
+  exception when unique_violation then blocked := true;
+  end;
+  perform pg_temp.check_that('a reader never sees the same reminder twice', blocked);
+
+  -- A reminder is free to appear under a different verse for someone else.
+  insert into daily_assignments (user_id, verse_id, reminder_id, assigned_on, theme)
+  select 'd3333333-3333-3333-3333-333333333333', id, r_one, date '2097-03-05', 'test'
+  from daily_verses where id <> v_id and devotional limit 1;
+
+  perform pg_temp.check_that(
+    'a reminder may pair with a different verse for a different reader', true);
 end $$;
 
 -- ---------------------------------------------------------------------------
@@ -200,7 +207,7 @@ declare
   extra     record;
   spare     uuid;
 begin
-  select count(*) into pool_size from daily_verses where status = 'active';
+  select count(*) into pool_size from daily_verses where status = 'active' and devotional;
 
   -- Fill every remaining slot for a distant date.
   for i in 1..pool_size loop
