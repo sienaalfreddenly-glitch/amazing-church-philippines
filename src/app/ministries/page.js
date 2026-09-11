@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Avatar from '@/components/Avatar';
 import Reveal from '@/components/Reveal';
 import Spotlight from '@/components/Spotlight';
 import MinistryInterestButton from '@/components/MinistryInterestButton';
@@ -31,6 +32,17 @@ export default async function MinistriesPage() {
     ? await supabase.from('ministry_interests').select('ministry_id')
     : { data: [] };
   const myInterests = new Set((mine || []).map((r) => r.ministry_id));
+
+  // Who is actually serving. Confirmed members only, and unlike the interested
+  // list this is not a secret: the congregation should know who is on the sound
+  // desk. One call covers every ministry.
+  const { data: teamRows } = user ? await supabase.rpc('ministry_teams') : { data: [] };
+  const teamByMinistry = new Map();
+  for (const row of teamRows || []) {
+    const list = teamByMinistry.get(row.ministry_id) || [];
+    list.push(row);
+    teamByMinistry.set(row.ministry_id, list);
+  }
 
   return (
     <div className="space-y-12">
@@ -83,6 +95,33 @@ export default async function MinistriesPage() {
                     </ul>
                   </div>
                 </div>
+
+                {/* The people already doing this. Puts faces to the ask, and
+                    tells a newcomer who to talk to. */}
+                {(() => {
+                  const team = teamByMinistry.get(m.id) || [];
+                  if (!team.length) return null;
+                  return (
+                    <div className="mt-6 border-t border-silver-light pt-4">
+                      <h3 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-ink/50">
+                        Serving on this team
+                      </h3>
+                      <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-3">
+                        {team.map((person) => (
+                          <li key={person.profile_id} className="flex items-center gap-2.5">
+                            <Avatar url={person.avatar_url} name={person.full_name} size={32} />
+                            <span className="text-sm">
+                              <span className="font-medium">{person.full_name}</span>
+                              {person.role_in_team && (
+                                <span className="block text-xs text-ink/50">{person.role_in_team}</span>
+                              )}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })()}
 
                 {approved ? (
                   <MinistryInterestButton

@@ -9,34 +9,38 @@ import NotificationBell from './NotificationBell';
 export default function Navbar({ profile }) {
   const isMember = profile?.account_status === 'approved';
 
-  const links = isMember
+  // What people actually open week to week stays in the bar. Everything else
+  // goes behind More, so the row reads as a menu rather than a list.
+  const primary = isMember
     ? [
-        { href: '/', label: 'Home' },
-        { href: '/news', label: 'News' },
         { href: '/feed', label: 'Feed' },
         { href: '/discussions', label: 'Discussions' },
-        { href: '/leaders', label: 'Leaders' },
         { href: '/ministries', label: 'Ministries' },
-        { href: '/org', label: 'Org chart' },
-        { href: '/courses', label: 'Courses' },
         { href: '/events', label: 'Events' },
-        { href: '/live', label: 'Live' },
       ]
     : [
-        { href: '/', label: 'Home' },
-        { href: '/news', label: 'News' },
         { href: '/ministries', label: 'Ministries' },
         { href: '/events', label: 'Events' },
         { href: '/live', label: 'Live' },
       ];
 
-  if (profile && isStaff(profile.role)) {
-    links.push({
-      href: '/admin',
-      label: isAdmin(profile.role) ? 'Admin' : 'Moderate',
-      accent: true,
-    });
-  }
+  const more = isMember
+    ? [
+        { href: '/live', label: 'Live' },
+        { href: '/news', label: 'News' },
+        { href: '/courses', label: 'Courses' },
+        { href: '/leaders', label: 'Leaders' },
+        { href: '/org', label: 'Org chart' },
+      ]
+    : [
+        { href: '/news', label: 'News' },
+      ];
+
+  // Kept out of More: staff reach for it often, and it is the one destination
+  // where a click has consequences.
+  const admin = profile && isStaff(profile.role)
+    ? { href: '/admin', label: isAdmin(profile.role) ? 'Admin' : 'Moderate', accent: true }
+    : null;
 
   return (
     <header className="sticky top-0 z-sticky nav-blur">
@@ -52,7 +56,7 @@ export default function Navbar({ profile }) {
           />
         </Link>
 
-        <NavLinks links={links} />
+        <NavLinks primary={primary} more={more} admin={admin} />
 
         <div className="flex shrink-0 items-center gap-2">
           {profile ? (
