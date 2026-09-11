@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "test": "node --test src/lib/*.test.js",
-    "test:db": "echo \"run scripts/daily-db-tests.sql against the database, see the README\""
+    "test:db": "echo \"run scripts/daily-db-tests.sql against the database, see the README\"",
+    "gemini:check": "node scripts/check-gemini-key.mjs",
+    "reminders:generate": "node scripts/generate-reminders.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.1",
