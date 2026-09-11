@@ -11,6 +11,8 @@ const KIND_TEXT = {
   reaction:        'reacted to your',
   comment:         'commented on your',
   mention:         'mentioned you in a',
+  // Sent to every leader when someone signs up without choosing one.
+  unassigned_member: 'signed up without a leader',
 };
 
 function linkFor(n) {
@@ -19,6 +21,9 @@ function linkFor(n) {
   if (n.entity_type === 'course')     return `/courses/${n.entity_id}`;
   if (n.entity_type === 'lesson')     return `/courses`;
   if (n.entity_type === 'comment')    return `/feed`;
+  // Leaders act on this from the members admin screen, where they can assign
+  // themselves or someone else.
+  if (n.entity_type === 'profile')    return `/admin/users`;
   return '#';
 }
 
@@ -92,6 +97,7 @@ export default function NotificationBell() {
     else if (n.kind === 'reaction')   suffix = ` ${n.entity_type}${n.metadata?.emoji ? ' (' + n.metadata.emoji + ')' : ''}`;
     else if (n.kind === 'comment')    suffix = ` ${n.entity_type}`;
     else if (n.kind === 'mention')    suffix = ` ${n.entity_type}`;
+    else if (n.kind === 'unassigned_member') suffix = '';
     return `${who} ${verb}${suffix}`;
   }
 
