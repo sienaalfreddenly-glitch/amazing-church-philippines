@@ -91,8 +91,10 @@
    REPLACE ME: swap this element for a Blender render and keep the class. */
 
 .frame-aperture {
-  width: min(88vw, 1240px);
-  height: min(74vh, 720px);
+  width: min(90vw, 1240px);
+  /* Tall enough to hold the whole hero. The frame is the opening the camera
+     flies through, so content spilling past its edge reads as a mistake. */
+  height: min(88vh, 860px);
   border-radius: 26px;
   box-shadow:
     0 0 0 42vmax rgba(251, 250, 247, 0.97),
@@ -106,8 +108,8 @@
    sense of thickness as the camera passes through. */
 
 .frame-inner {
-  width: min(78vw, 1080px);
-  height: min(63vh, 600px);
+  width: min(80vw, 1090px);
+  height: min(78vh, 745px);
   border-radius: 18px;
   border: 1px solid rgba(176, 141, 87, 0.42);
   opacity: calc(0.85 - var(--p) * 0.85);
@@ -130,7 +132,7 @@
   padding: 0 1.5rem;
   text-align: center;
   /* Sits inside the aperture, which is min(88vw, 1240px) wide. */
-  max-width: min(58vw, 44rem);
+  max-width: min(72vw, 46rem);
 }
 @media (max-width: 900px) {
   .hero-copy { max-width: 100%; }
@@ -391,6 +393,7 @@
   margin-inline: calc(50% - 50vw);
   /* Cancel main's top padding so the scene meets the nav flush. */
   margin-top: -2rem;
+  margin-bottom: var(--gap-l);
 }
 
 /* 100vw counts the vertical scrollbar, so the full-bleed escape is a few pixels
@@ -486,4 +489,35 @@ html {
 @media (prefers-reduced-motion: reduce) {
   .org-card { transition: none; }
   .org-card:hover { transform: none; }
+}
+
+/* ---------------------------------------------------------------------------
+ * Shell and fluid page rhythm.
+ *
+ * Every page sits in the same column and breathes at the same rate, so moving
+ * between them does not feel like moving between sites. The column is a clamp
+ * rather than a set of breakpoint widths, which is what keeps a half-width
+ * browser window from being served the phone layout.
+ * ------------------------------------------------------------------------ */
+
+.shell {
+  width: var(--shell);
+  margin-inline: auto;
+}
+
+.shell-narrow {
+  width: var(--shell-narrow);
+  margin-inline: auto;
+}
+
+.page-header h1 {
+  font-size: var(--step-4);
+}
+
+.stack > * + * {
+  margin-top: var(--gap-m);
+}
+
+.stack-l > * + * {
+  margin-top: var(--gap-l);
 }

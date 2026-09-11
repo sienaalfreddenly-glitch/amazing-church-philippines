@@ -13,12 +13,14 @@ export default function Navbar({ profile }) {
   // goes behind More, so the row reads as a menu rather than a list.
   const primary = isMember
     ? [
+        { href: '/', label: 'Home' },
         { href: '/feed', label: 'Feed' },
         { href: '/discussions', label: 'Discussions' },
         { href: '/ministries', label: 'Ministries' },
         { href: '/events', label: 'Events' },
       ]
     : [
+        { href: '/', label: 'Home' },
         { href: '/ministries', label: 'Ministries' },
         { href: '/events', label: 'Events' },
         { href: '/live', label: 'Live' },
@@ -44,7 +46,7 @@ export default function Navbar({ profile }) {
 
   return (
     <header className="sticky top-0 z-sticky nav-blur">
-      <div className="relative mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
+      <div className="shell relative flex h-16 items-center justify-between gap-4">
         <Link href="/" className="shrink-0" aria-label="Amazing Church Philippines — home">
           <Image
             src="/logo.png"

@@ -52,7 +52,7 @@ export default async function RootLayout({ children }) {
 
         <Navbar profile={profile} />
 
-        <main id="main" className="mx-auto max-w-6xl px-4 pb-10 pt-8 animate-fade-up">
+        <main id="main" className="shell pb-16 pt-8 animate-fade-up">
           {children}
         </main>
 

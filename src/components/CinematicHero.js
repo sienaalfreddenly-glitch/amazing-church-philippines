@@ -63,12 +63,12 @@ export default function CinematicHero() {
             </p>
 
             <h1 className="hero-title">
-              A church you can belong to <em>before</em> you believe
+              There is a place for you here, and you are <em>already loved</em>
             </h1>
 
             <p className="hero-lede">
-              Join the discussions, share what God is doing in your life, and stay close to every
-              service, event, and livestream.
+              Come exactly as you are. Bring your questions, your good weeks and your hard ones,
+              and find a family that is glad you walked in.
             </p>
 
             <div className="hero-actions">

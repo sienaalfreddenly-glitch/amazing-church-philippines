@@ -27,6 +27,32 @@
     }
   }
 
+  /* Fluid scale.
+   *
+   * Type and spacing interpolate with the viewport instead of stepping at
+   * breakpoints, so a 900px window is not served the phone layout at desktop
+   * size. Every value is clamped at both ends: it never collapses on a small
+   * phone and never keeps growing on a television.
+   *
+   * The 1.5rem + Nvw form means the text still scales when someone zooms,
+   * which a pure vw value would break. */
+  :root {
+    --step--1: clamp(0.82rem, 0.79rem + 0.14vw, 0.9rem);
+    --step-0:  clamp(0.95rem, 0.91rem + 0.2vw,  1.05rem);
+    --step-1:  clamp(1.15rem, 1.07rem + 0.38vw, 1.35rem);
+    --step-2:  clamp(1.4rem,  1.26rem + 0.7vw,  1.8rem);
+    --step-3:  clamp(1.75rem, 1.5rem + 1.2vw,   2.45rem);
+    --step-4:  clamp(2.1rem,  1.66rem + 2.2vw,  3.3rem);
+
+    --gap-s:  clamp(0.75rem, 0.65rem + 0.5vw, 1.1rem);
+    --gap-m:  clamp(1.25rem, 1rem + 1.2vw,    2.25rem);
+    --gap-l:  clamp(2.5rem,  1.9rem + 3vw,    5rem);
+
+    /* One reading column the whole site shares. */
+    --shell: min(100% - 2rem, 72rem);
+    --shell-narrow: min(100% - 2rem, 44rem);
+  }
+
   html, body { background: var(--paper); color: var(--ink); }
   body {
     font-family: var(--font-sans), system-ui, sans-serif;
@@ -292,7 +318,13 @@
     background-image: linear-gradient(90deg, transparent, rgba(176, 141, 87, 0.55) 20%, rgba(176, 141, 87, 0.55) 80%, transparent);
   }
 
-  /* Line clamp helper */
+  /* Line clamp helpers */
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
   .line-clamp-6 {
     display: -webkit-box;
     -webkit-line-clamp: 6;

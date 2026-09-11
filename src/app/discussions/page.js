@@ -2,6 +2,9 @@ import { createClient, getSessionAndProfile } from '@/lib/supabase-server';
 import PostCard from '@/components/PostCard';
 import PostComposer from '@/components/PostComposer';
 import MembersOnlyGate from '@/components/MembersOnlyGate';
+import PageHeader from '@/components/PageHeader';
+import Reveal from '@/components/Reveal';
+import { IconChat } from '@/components/Icons';
 import { isApproved } from '@/lib/roles';
 
 export const dynamic = 'force-dynamic';
@@ -17,10 +20,16 @@ async function countComments(supabase, entityType, ids) {
 
 export default async function Discussions() {
   const { user, profile } = await getSessionAndProfile();
+
   if (!user || !isApproved(profile)) {
-    return <MembersOnlyGate title="Discussions"
-      description="Ask, share, and grow together in faith with the church community." />;
+    return (
+      <MembersOnlyGate
+        title="Discussions"
+        description="Bring your questions about faith and life, and talk them through with the church."
+      />
+    );
   }
+
   const supabase = createClient();
   const { data: threads } = await supabase
     .from('discussions')
@@ -30,41 +39,78 @@ export default async function Discussions() {
     .limit(50);
 
   const commentCounts = await countComments(supabase, 'discussion', threads?.map(t => t.id) || []);
+  const items = threads || [];
+
+  // Threads nobody has answered yet come first. An unanswered question in a
+  // church is the one thing on this page that actually needs someone.
+  const unanswered = items.filter((t) => !commentCounts[t.id]);
+  const answered = items.filter((t) => commentCounts[t.id]);
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5">
-      <div className="text-center">
-        <p className="gilt-text text-[11px] font-semibold uppercase tracking-[0.3em]">Ask anything</p>
-        <h1 className="mt-3 text-4xl sm:text-5xl">Discussions</h1>
-        <p className="mt-4 max-w-prose text-ink/65">
-          Bring the question you have been carrying around. Nobody here expects you to have
-          it all worked out, and no question is too basic to ask.
-        </p>
-      </div>
+    <div className="stack-l">
+      <PageHeader
+        eyebrow="Ask anything"
+        title="Discussions"
+        lead="Bring the question you have been carrying around. Nobody here expects you to have it all worked out, and no question is too basic to ask."
+      />
 
-      {user && isApproved(profile) && <PostComposer kind="discussion" />}
-      {user && !isApproved(profile) && (
-        <div className="card text-center">
-          <p className="text-sm text-ink/70">
-            Your account is pending approval. You'll be able to start discussions once an admin approves you.
-          </p>
-        </div>
-      )}
-      {!user && (
-        <div className="card text-center">
-          <p className="text-ink/70">Join the conversation.</p>
-          <div className="mt-3 flex justify-center gap-2">
-            <Link href="/login" className="btn-outline">Log in</Link>
-            <Link href="/signup" className="btn-primary">Sign up</Link>
+      <div className="shell-narrow stack">
+        <PostComposer kind="discussion" />
+
+        {!items.length && (
+          <div className="card card-static py-14 text-center">
+            <div className="inline-block animate-floaty text-brand"><IconChat size={40} /></div>
+            <p className="mt-4 font-medium text-ink/75">No questions yet</p>
+            <p className="mx-auto mt-1 max-w-xs text-sm text-ink/60">
+              Ask the first one. Whatever it is, somebody else is wondering it too.
+            </p>
           </div>
-        </div>
-      )}
+        )}
 
-      {threads?.length ? threads.map(t =>
-        <PostCard key={t.id} item={t} kind="discussion"
-          viewerRole={profile?.role} viewerId={user?.id}
-          commentCount={commentCounts[t.id] || 0} />
-      ) : <p className="text-ink/60 text-center py-8">No discussions yet.</p>}
+        {unanswered.length > 0 && (
+          <section aria-labelledby="unanswered-heading" className="stack">
+            <h2 id="unanswered-heading" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-ink/50">
+              Waiting for a reply
+            </h2>
+            {unanswered.map((t, i) => (
+              <Reveal key={t.id} delay={Math.min(i, 4) * 70}>
+                <div className="relative">
+                  <PostCard
+                    item={t}
+                    kind="discussion"
+                    variant="preview"
+                    viewerRole={profile?.role}
+                    viewerId={user?.id}
+                    commentCount={0}
+                  />
+                </div>
+              </Reveal>
+            ))}
+          </section>
+        )}
+
+        {answered.length > 0 && (
+          <section aria-labelledby="answered-heading" className="stack">
+            <h2 id="answered-heading" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-ink/50">
+              Being talked about
+            </h2>
+            {answered.map((t, i) => (
+              <Reveal key={t.id} delay={Math.min(i, 4) * 70}>
+                <div className="relative">
+                  <PostCard
+                    item={t}
+                    kind="discussion"
+                    variant="preview"
+                    viewerRole={profile?.role}
+                    viewerId={user?.id}
+                    commentCount={commentCounts[t.id] || 0}
+                  />
+                </div>
+              </Reveal>
+            ))}
+          </section>
+        )}
+      </div>
     </div>
   );
 }
