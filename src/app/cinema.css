@@ -1,0 +1,406 @@
+/*
+ * Scroll cinema.
+ *
+ * Everything here reads --p, the 0-to-1 scroll progress that ScrollScene
+ * publishes on each .scene-stage. No JavaScript touches these properties; JS
+ * writes one number and CSS does the rest, so every transition below is
+ * composited on transform and opacity.
+ *
+ * TUNING
+ *   --dolly-range   how far the camera travels through the scene, in px of Z
+ *   --scene-height  set per scene via the ScrollScene height prop
+ *   Layer distances live on the data-depth attributes in CinematicHero.js
+ */
+
+.scene-track {
+  position: relative;
+  height: var(--scene-height, 200vh);
+}
+
+.scene-stage {
+  position: sticky;
+  top: 0;
+  /* dvh, not vh: iOS Safari resizes the viewport as its chrome hides, and vh
+     would make the pinned stage jump at exactly the wrong moment. */
+  height: 100dvh;
+  overflow: hidden;
+  /* --p is written by ScrollScene each frame. This default keeps the scene
+     composed if JavaScript never runs. */
+  --p: 0;
+  --dolly-range: 620px;
+}
+
+/* Motion off, or JS absent: hold the resting composition, no transforms. */
+.scene-stage[data-motion='off'] .layer,
+.scene-stage:not([data-motion]) .layer {
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+/* ---- the camera ------------------------------------------------------ */
+
+.camera {
+  position: absolute;
+  inset: 0;
+  perspective: 1100px;
+  perspective-origin: 50% 46%;
+  transform-style: preserve-3d;
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+  /* The dolly. --d is where the layer starts on the Z axis, --s is how fast it
+     closes on the camera. Distance alone is not parallax: without per-layer
+     speed every plane travels together and the whole scene reads as one flat
+     zoom. The far plate barely moves, the near vignette overtakes the viewer. */
+  transform: translate3d(0, 0, calc(var(--d, 0px) + var(--p) * var(--dolly-range) * var(--s, 1)));
+}
+
+.layer[data-depth='-900'] { --d: -900px; --s: 0.22; }
+.layer[data-depth='-520'] { --d: -520px; --s: 1;    }
+.layer[data-depth='-260'] { --d: -260px; --s: 1.45; }
+.layer[data-depth='0']    { --d: 0px;    --s: 0;    }
+.layer[data-depth='120']  { --d: 120px;  --s: 1.7;  }
+
+/* ---- layer 1: photographic plate ------------------------------------- */
+
+.plate {
+  position: absolute;
+  inset: -12%;
+  /* Counter-scale so the furthest layer still fills the frame once
+     perspective has shrunk it. */
+  transform: scale(1.45);
+}
+.plate img { object-fit: cover; }
+
+/* ---- layer 2: the arch aperture --------------------------------------- */
+/* REPLACE ME: swap this element for a Blender render and keep the class. */
+
+.arch-aperture {
+  width: min(92vw, 1180px);
+  height: min(118vh, 1020px);
+  border-radius: 999px 999px 40px 40px;
+  /* A thick wall with a hole in it: the ring is the masonry, the hole is
+     what the camera flies through. */
+  box-shadow:
+    0 0 0 42vmax rgba(251, 250, 247, 0.97),
+    inset 0 0 90px rgba(38, 9, 13, 0.16);
+  border: 1px solid rgba(176, 141, 87, 0.4);
+  opacity: calc(1 - var(--p) * 0.55);
+}
+
+/* ---- layer 3: gilt leading -------------------------------------------- */
+
+.arch-leading {
+  width: min(74vw, 880px);
+  height: min(92vh, 800px);
+  border-radius: 999px 999px 28px 28px;
+  border: 1px solid rgba(176, 141, 87, 0.55);
+  opacity: calc(0.9 - var(--p) * 0.9);
+}
+.arch-leading::before,
+.arch-leading::after {
+  content: '';
+  position: absolute;
+  top: 18%;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(180deg, rgba(176, 141, 87, 0.5), transparent);
+}
+.arch-leading::before { left: 33%; }
+.arch-leading::after  { right: 33%; }
+
+/* ---- layer 4: the content plane --------------------------------------- */
+
+.layer-content {
+  /* Content holds its ground while the architecture rushes past, then fades
+     out as the camera arrives at the verse. */
+  transform: translate3d(0, calc(var(--p) * -60px), calc(var(--p) * 90px));
+  opacity: calc(1 - max(0, var(--p) - 0.62) * 2.6);
+}
+
+.hero-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding: 0 1.5rem;
+  text-align: center;
+  /* Sits inside the arch aperture, which is min(74vw, 880px) wide. */
+  max-width: min(64vw, 46rem);
+}
+@media (max-width: 900px) {
+  .hero-copy { max-width: 100%; }
+}
+
+.hero-logo {
+  width: min(78vw, 420px);
+  height: auto;
+  filter: drop-shadow(0 10px 26px rgba(38, 9, 13, 0.4));
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.75rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+}
+.eyebrow-rule {
+  display: block;
+  height: 1px;
+  width: clamp(1.5rem, 6vw, 4rem);
+  background: linear-gradient(90deg, transparent, rgb(176, 141, 87));
+}
+.eyebrow-rule:last-child { transform: scaleX(-1); }
+
+.hero-title {
+  margin-top: 1rem;
+  font-size: clamp(2.1rem, 5.2vw, 4.25rem);
+  font-weight: 900;
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.hero-title em {
+  font-style: normal;
+  color: var(--brand);
+}
+
+.hero-lede {
+  margin-top: 1.25rem;
+  max-width: 46ch;
+  font-size: clamp(1rem, 1.4vw, 1.125rem);
+  line-height: 1.6;
+  color: rgba(26, 22, 20, 0.7);
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem 1rem;
+  margin-top: 2.25rem;
+}
+
+/* ---- layer 5: foreground falloff -------------------------------------- */
+
+.foreground-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(74% 62% at 50% 48%, transparent 40%, rgba(251, 250, 247, 0.75) 100%);
+  opacity: calc(0.35 + var(--p) * 0.65);
+}
+
+/* ---- scroll cue -------------------------------------------------------- */
+
+.scroll-cue {
+  position: absolute;
+  left: 50%;
+  bottom: 2rem;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(26, 22, 20, 0.45);
+  /* Gone as soon as the reader has taken the hint. */
+  opacity: calc(1 - var(--p) * 5);
+}
+.scroll-cue-line {
+  width: 1px;
+  height: 2.5rem;
+  background: linear-gradient(180deg, rgb(176, 141, 87), transparent);
+}
+
+/* ---- mobile ------------------------------------------------------------ */
+/* Coarse pointers get a shorter throw and a shallower stack. The narrative
+   survives; the depth simply costs less to composite. */
+
+@media (max-width: 640px), (pointer: coarse) {
+  .scene-stage { --dolly-range: 280px; }
+  .layer[data-depth='-900'] { --d: -520px; }
+  .layer[data-depth='-520'] { --d: -300px; }
+  .layer[data-depth='-260'] { --d: -150px; }
+  .plate { transform: scale(1.2); }
+  .arch-aperture { box-shadow: 0 0 0 42vmax rgba(251, 250, 247, 0.97); }
+  .arch-leading::before,
+  .arch-leading::after { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-track { height: auto; }
+  .scene-stage { position: static; height: auto; padding: 5rem 0; overflow: visible; }
+  .camera { position: static; perspective: none; }
+  .layer { position: static; transform: none; }
+  .layer:not(.layer-content) { display: none; }
+  .scroll-cue { display: none; }
+}
+
+/* ---------------------------------------------------------------------------
+ * The final scene: footer.
+ * ------------------------------------------------------------------------ */
+
+.site-footer {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin-top: 8rem;
+  padding: clamp(4rem, 10vw, 8rem) 1.5rem clamp(2rem, 4vw, 3rem);
+  color: rgb(251, 250, 247);
+  background-color: #3A0E14;
+  background-image:
+    radial-gradient(720px 420px at 14% 0%, rgba(177, 85, 100, 0.5), transparent 64%),
+    radial-gradient(560px 420px at 92% 104%, rgba(38, 9, 13, 0.9), transparent 60%);
+}
+
+/* The arch from act one, reappearing as an outline behind the sign-off. */
+.footer-arch {
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 8%;
+  width: min(80vw, 820px);
+  height: min(70vh, 620px);
+  transform: translateX(-50%);
+  border: 1px solid rgba(176, 141, 87, 0.22);
+  border-radius: 999px 999px 24px 24px;
+  mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 100%);
+}
+
+.footer-inner {
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.footer-eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+.footer-statement {
+  margin-top: 1.25rem;
+  max-width: 18ch;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: clamp(2.25rem, 6.5vw, 5rem);
+  font-weight: 700;
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.footer-columns {
+  display: grid;
+  gap: 2.5rem 2rem;
+  margin-top: clamp(3.5rem, 8vw, 6rem);
+  grid-template-columns: 1fr;
+}
+@media (min-width: 640px) {
+  .footer-columns { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.footer-heading {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(227, 201, 154, 0.75);
+}
+
+.footer-list {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  list-style: none;
+  padding: 0;
+}
+
+/* One underline that wipes in from the left on hover and on focus, so the
+   keyboard path gets the same affordance as the pointer path. */
+.footer-link {
+  position: relative;
+  display: inline-block;
+  font-size: 1.0625rem;
+  color: rgba(251, 250, 247, 0.78);
+  text-decoration: none;
+  transition: color 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.footer-link span { display: inline-block; transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1); }
+.footer-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  height: 1px;
+  width: 100%;
+  background: rgb(176, 141, 87);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.footer-link:hover,
+.footer-link:focus-visible { color: rgb(251, 250, 247); }
+.footer-link:hover::after,
+.footer-link:focus-visible::after { transform: scaleX(1); }
+.footer-link:hover span,
+.footer-link:focus-visible span { transform: translateX(4px); }
+
+.footer-baseline {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: clamp(3rem, 7vw, 5rem);
+  padding-top: 1.75rem;
+  border-top: 1px solid rgba(176, 141, 87, 0.25);
+  font-size: 0.875rem;
+  color: rgba(251, 250, 247, 0.55);
+}
+@media (min-width: 640px) {
+  .footer-baseline { flex-direction: row; align-items: center; justify-content: space-between; }
+}
+
+.footer-legal { display: flex; gap: 1.5rem; }
+.footer-legal .footer-link { font-size: 0.875rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .footer-link span,
+  .footer-link::after { transition: none; }
+}
+
+/* ---------------------------------------------------------------------------
+ * Full-bleed escape. `main` is a centred 72rem column, which is right for every
+ * other page but wrong for a cinematic scene, so the hero breaks out of it
+ * without changing the layout shared by the rest of the site.
+ * ------------------------------------------------------------------------ */
+
+.hero-scene {
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+  /* Cancel main's top padding so the scene meets the nav flush. */
+  margin-top: -2rem;
+}
+
+/* 100vw counts the vertical scrollbar, so the full-bleed escape is a few pixels
+   wider than the page and produces a horizontal scrollbar. clip removes the
+   overflow without creating a scroll container, which would break the sticky
+   stages. */
+html {
+  overflow-x: clip;
+}

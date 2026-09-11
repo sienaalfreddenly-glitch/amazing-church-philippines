@@ -1,9 +1,7 @@
 import Link from 'next/link';
-import Image from 'next/image';
+import CinematicHero from '@/components/CinematicHero';
 import FacebookEmbed from '@/components/FacebookEmbed';
 import DailyVerse from '@/components/DailyVerse';
-import HeroParallax from '@/components/HeroParallax';
-import HeroSlideshow from '@/components/HeroSlideshow';
 import Reveal from '@/components/Reveal';
 import Spotlight from '@/components/Spotlight';
 import Tilt3D from '@/components/Tilt3D';
@@ -48,80 +46,8 @@ export default async function Home() {
 
   return (
     <div className="space-y-20 sm:space-y-28">
-      {/* Hero — arched crown, the one church cue the whole page is built around */}
-      <HeroParallax>
-        <section
-          className="relative isolate overflow-hidden rounded-[28px] px-6 py-20 text-center shadow-deep
-                     sm:rounded-t-[140px] sm:rounded-b-[32px] sm:px-10 sm:pb-28 sm:pt-28
-                     lg:rounded-t-[220px] lg:pt-32"
-          style={{
-            // Layered off-centre washes stand in when no hero slides are set,
-            // so the section never renders as flat empty space.
-            backgroundColor: '#FFFFFF',
-            backgroundImage:
-              'radial-gradient(760px 460px at 78% -12%, rgba(122,31,43,0.13), transparent 64%),' +
-              'radial-gradient(620px 420px at 8% 106%, rgba(177,85,100,0.10), transparent 62%)',
-          }}
-        >
-          <HeroSlideshow />
-
-          {/* Soft centre scrim: holds headline contrast over whichever slide is
-              showing, while the photograph still reads at the edges. */}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0"
-            style={{
-              background:
-                'radial-gradient(62% 58% at 50% 52%, rgba(251,250,247,0.88) 0%, rgba(251,250,247,0.55) 55%, rgba(251,250,247,0) 100%)',
-            }}
-          />
-
-          {/* Gilt inner rule tracing the arch, like leading in a window. */}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-3 rounded-[22px] border border-gilt/25
-                       sm:inset-5 sm:rounded-t-[124px] sm:rounded-b-[24px] lg:rounded-t-[200px]"
-          />
-
-          <div className="relative z-raised flex flex-col items-center">
-            <Tilt3D max={10} scale={1.03} className="inline-block">
-              <Image
-                src="/logo.png"
-                alt="Amazing Church Philippines"
-                width={720}
-                height={288}
-                priority
-                className="h-auto w-full max-w-[480px] animate-floaty"
-                style={{ filter: 'drop-shadow(0 10px 26px rgba(38,9,13,0.4))' }}
-              />
-            </Tilt3D>
-
-            <div className="mt-8 flex items-center gap-4">
-              <span aria-hidden="true" className="h-px w-10 bg-gradient-to-r from-transparent to-gilt sm:w-16" />
-              <p className="gilt-text text-[11px] font-semibold uppercase tracking-[0.38em]">Welcome home</p>
-              <span aria-hidden="true" className="h-px w-10 bg-gradient-to-l from-transparent to-gilt sm:w-16" />
-            </div>
-
-            <h1 className="mt-5 max-w-4xl font-black text-[2.4rem] leading-[0.98] tracking-[-0.03em] text-ink sm:text-5xl lg:text-7xl">
-              A church you can belong to <span className="text-brand">before</span> you believe
-            </h1>
-
-            <p className="mt-6 max-w-prose text-base leading-relaxed text-ink/70 sm:text-lg">
-              Join the discussions, share what God is doing in your life, and stay close to every
-              service, event, and livestream.
-            </p>
-
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-x-4 gap-y-3">
-              <Link href="/signup" className="btn-primary group px-6 py-3 text-base">
-                <span>Join the community</span>
-                <IconArrow size={17} className="transition-transform duration-200 group-hover:translate-x-1" />
-              </Link>
-              <Link href="/live" className="btn-outline px-5 py-3 text-base">Watch live</Link>
-              <Link href="/events" className="btn-quiet">See what is on</Link>
-            </div>
-          </div>
-        </section>
-      </HeroParallax>
+      {/* Act one: the camera travels through the arch. */}
+      <CinematicHero />
 
       {/* Daily Verse */}
       <Reveal>

@@ -1,7 +1,8 @@
 import './globals.css';
+import './cinema.css';
 import { Fraunces, Outfit } from 'next/font/google';
-import Link from 'next/link';
 import Navbar from '@/components/Navbar';
+import SiteFooter from '@/components/SiteFooter';
 import { getSessionAndProfile } from '@/lib/supabase-server';
 
 const sans = Outfit({
@@ -43,7 +44,6 @@ export const viewport = {
 
 export default async function RootLayout({ children }) {
   const { profile } = await getSessionAndProfile();
-  const year = new Date().getFullYear();
 
   return (
     <html lang="en" className={`${sans.variable} ${display.variable}`}>
@@ -56,23 +56,7 @@ export default async function RootLayout({ children }) {
           {children}
         </main>
 
-        <footer className="mt-20 border-t border-silver-light">
-          <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="font-display text-lg text-brand">
-                We win souls and make them disciples of Jesus
-              </p>
-              <p className="nums mt-2 text-sm text-ink/55">© {year} {SITE}</p>
-            </div>
-            <nav aria-label="Footer" className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-ink/60">
-              <Link href="/events" className="transition-colors hover:text-brand">Events</Link>
-              <Link href="/live" className="transition-colors hover:text-brand">Live</Link>
-              <Link href="/leaders" className="transition-colors hover:text-brand">Leaders</Link>
-              <Link href="/privacy" className="transition-colors hover:text-brand">Privacy</Link>
-              <Link href="/terms" className="transition-colors hover:text-brand">Terms</Link>
-            </nav>
-          </div>
-        </footer>
+        <SiteFooter />
       </body>
     </html>
   );
