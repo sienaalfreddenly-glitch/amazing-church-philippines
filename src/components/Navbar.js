@@ -16,6 +16,7 @@ export default function Navbar({ profile }) {
         { href: '/feed', label: 'Feed' },
         { href: '/discussions', label: 'Discussions' },
         { href: '/leaders', label: 'Leaders' },
+        { href: '/ministries', label: 'Ministries' },
         { href: '/org', label: 'Org chart' },
         { href: '/courses', label: 'Courses' },
         { href: '/events', label: 'Events' },
@@ -24,6 +25,7 @@ export default function Navbar({ profile }) {
     : [
         { href: '/', label: 'Home' },
         { href: '/news', label: 'News' },
+        { href: '/ministries', label: 'Ministries' },
         { href: '/events', label: 'Events' },
         { href: '/live', label: 'Live' },
       ];

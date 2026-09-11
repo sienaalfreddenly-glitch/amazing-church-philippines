@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase-browser';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -9,7 +9,20 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
   const router = useRouter();
+
+  // Someone already signed in should never be shown a sign-in form. Without
+  // this the page rendered the form regardless, so the header said you were
+  // logged in while the body asked you to log in again.
+  useEffect(() => { (async () => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setChecking(false); return; }
+    const { data: profile } = await supabase
+      .from('profiles').select('account_status').eq('id', user.id).single();
+    router.replace(profile?.account_status === 'approved' ? '/feed' : '/pending');
+  })(); }, [router]);
 
   async function submit(e) {
     e.preventDefault(); setError(''); setLoading(true);
@@ -20,6 +33,19 @@ export default function Login() {
     const { data: profile } = await supabase.from('profiles').select('account_status').eq('id', data.user.id).single();
     if (profile?.account_status !== 'approved') { router.push('/pending'); return; }
     router.push('/feed'); router.refresh();
+  }
+
+  if (checking) {
+    return (
+      <div className="max-w-md mx-auto card mt-10" aria-busy="true">
+        <span className="sr-only">Checking your session</span>
+        <div className="skeleton h-7 w-40" />
+        <div className="skeleton mt-3 h-4 w-56" />
+        <div className="skeleton mt-8 h-11 w-full" />
+        <div className="skeleton mt-4 h-11 w-full" />
+        <div className="skeleton mt-6 h-11 w-full rounded-full" />
+      </div>
+    );
   }
 
   return (

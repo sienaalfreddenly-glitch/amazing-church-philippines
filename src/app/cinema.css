@@ -71,12 +71,17 @@
 
 .plate {
   position: absolute;
-  inset: -12%;
-  /* Counter-scale so the furthest layer still fills the frame once
-     perspective has shrunk it. */
-  transform: scale(1.45);
+  inset: 0;
+  /* Slight counter-scale only, to offset what perspective takes off the
+     furthest layer. Anything more starts cropping the photograph again. */
+  transform: scale(1.06);
 }
-.plate img { object-fit: cover; }
+/* contain, not cover: the whole photograph stays visible and rescales with the
+   frame as the camera moves, rather than being cropped to fill it. */
+.plate img {
+  object-fit: contain;
+  object-position: center;
+}
 
 /* ---- layer 2: the aperture --------------------------------------------- */
 /* A wide film frame. The camera travels through it; the surrounding mat is the
@@ -227,7 +232,7 @@
   .layer[data-depth='-900'] { --d: -520px; }
   .layer[data-depth='-520'] { --d: -300px; }
   .layer[data-depth='-260'] { --d: -150px; }
-  .plate { transform: scale(1.2); }
+  .plate { transform: scale(1.02); }
   .frame-aperture { box-shadow: 0 0 0 42vmax rgba(251, 250, 247, 0.97); }
 }
 

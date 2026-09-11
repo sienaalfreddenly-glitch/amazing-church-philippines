@@ -13,6 +13,7 @@ const KIND_TEXT = {
   mention:         'mentioned you in a',
   // Sent to every leader when someone signs up without choosing one.
   unassigned_member: 'signed up without a leader',
+  ministry_interest: 'is interested in',
 };
 
 function linkFor(n) {
@@ -24,6 +25,7 @@ function linkFor(n) {
   // Leaders act on this from the members admin screen, where they can assign
   // themselves or someone else.
   if (n.entity_type === 'profile')    return `/admin/users`;
+  if (n.entity_type === 'ministry')   return `/ministries`;
   return '#';
 }
 
@@ -98,6 +100,7 @@ export default function NotificationBell() {
     else if (n.kind === 'comment')    suffix = ` ${n.entity_type}`;
     else if (n.kind === 'mention')    suffix = ` ${n.entity_type}`;
     else if (n.kind === 'unassigned_member') suffix = '';
+    else if (n.kind === 'ministry_interest') suffix = ` ${n.metadata?.ministry || 'a ministry'}`;
     return `${who} ${verb}${suffix}`;
   }
 
