@@ -6,7 +6,9 @@ const TZ = 'Asia/Manila';
 /**
  * Daily Bible Verse.
  *
- * The verse and nothing else.
+ * A passage rather than a lone verse. Verse divisions cut across sentences, so
+ * a single verse often reads as a fragment. The draw still picks one verse; the
+ * database expands it to the surrounding sentences before it is shown.
  *
  * Everyone gets their own draw, and there is no global verse of the day, so two
  * readers may hold the same verse today. Members draw from the whole imported
@@ -81,9 +83,16 @@ export default async function DailyVerse() {
           {prettyDate}
         </p>
 
-        <blockquote className="mx-auto mt-7 max-w-3xl">
-          <p className={`font-display font-bold leading-[1.3] ${
-            entry.verse_text.length > 190 ? 'text-xl sm:text-2xl' : 'text-[1.6rem] sm:text-4xl'
+        <blockquote className={`mx-auto mt-7 max-w-3xl ${
+          entry.verse_text.length > 300 ? 'text-left' : ''
+        }`}>
+          {/* A passage runs longer than a single verse, so the size steps down
+              in stages rather than dropping off a cliff at one threshold. */}
+          <p className={`font-display font-bold ${
+            entry.verse_text.length > 520 ? 'text-base leading-relaxed sm:text-lg'
+            : entry.verse_text.length > 300 ? 'text-lg leading-relaxed sm:text-xl'
+            : entry.verse_text.length > 170 ? 'text-xl leading-snug sm:text-2xl'
+            : 'text-[1.6rem] leading-[1.3] sm:text-4xl'
           }`}>
             &ldquo;{entry.verse_text}&rdquo;
           </p>
