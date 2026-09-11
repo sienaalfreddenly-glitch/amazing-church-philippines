@@ -93,13 +93,13 @@ test('content validation enforces every writing rule', () => {
   assert.ok(fakeRef.problems.some((p) => p.includes('reference')));
 });
 
-test('the page renders only the two requested sections', () => {
+test('the page renders the verse and nothing else', () => {
   const source = readFileSync(new URL('../components/DailyVerse.js', import.meta.url), 'utf8');
 
   assert.ok(source.includes('Daily Bible Verse'));
-  assert.ok(source.includes("Today&apos;s Reminder"));
 
-  // The brief forbids these outright.
+  // Today's Reminder has been removed; it must stay gone.
+  assert.ok(!/Reminder/.test(source), 'the reminder section must not be rendered');
   assert.ok(!/>\s*Lesson\s*</.test(source), 'a Lesson section must not be rendered');
   assert.ok(!/Short Prayer/.test(source), 'a Short Prayer section must not be rendered');
   assert.ok(!/[—–]/.test(source), 'no em dashes in the component');
