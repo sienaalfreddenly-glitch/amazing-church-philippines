@@ -180,9 +180,6 @@
     background-image: linear-gradient(90deg, transparent, rgba(176, 141, 87, 0.75), transparent);
   }
 
-  /* Cathedral arch frame for imagery and feature panels. */
-  .arch { border-radius: 999px 999px 28px 28px; }
-
   /* Scroll-driven entry, written to fail open: the element is visible unless
      the Reveal wrapper has armed it, so content is never left hidden behind
      JavaScript that did not run. Arming happens in an effect; data-shown then

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { SERVER_SUPABASE_URL, TUNNEL_HEADERS } from '@/lib/supabase-config';
 
 // Proxy for Supabase Storage public objects.
 // Needed because browsers loading media directly from the ngrok-free.dev
@@ -9,12 +10,15 @@ export const runtime = 'nodejs';
 
 export async function GET(req, { params }) {
   const path = (params.path || []).map(encodeURIComponent).join('/');
-  const src = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${path}`;
+  // Straight to Supabase. Using the public URL here sent every image out
+  // through the tunnel and back in, which failed whenever the tunnel was
+  // down and returned a 500 for each one.
+  const src = `${SERVER_SUPABASE_URL}/storage/v1/object/public/${path}`;
   const range = req.headers.get('range');
 
   const upstream = await fetch(src, {
     headers: {
-      'ngrok-skip-browser-warning': 'any',
+      ...TUNNEL_HEADERS,
       ...(range ? { Range: range } : {}),
     },
     cache: 'no-store',

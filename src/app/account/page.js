@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase-browser';
 import { useRouter } from 'next/navigation';
 import Avatar from '@/components/Avatar';
+import SocialLinks from '@/components/SocialLinks';
 
 export default function Account() {
   const supabase = createClient();
@@ -15,6 +16,10 @@ export default function Account() {
   const [profile, setProfile] = useState(null);
   const [fullName, setFullName] = useState('');
   const [contactNumber, setContactNumber] = useState('');
+  const [facebookUrl, setFacebookUrl] = useState('');
+  const [instagramUrl, setInstagramUrl] = useState('');
+  const [showContact, setShowContact] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [leader, setLeader] = useState(null);
   const [latestLesson, setLatestLesson] = useState(null);
 
@@ -26,6 +31,9 @@ export default function Account() {
     setProfile(data);
     setFullName(data.full_name || '');
     setContactNumber(data.contact_number || '');
+    setFacebookUrl(data.facebook_url || '');
+    setInstagramUrl(data.instagram_url || '');
+    setShowContact(Boolean(data.show_contact));
     if (data.leader_id) {
       const { data: ld } = await supabase.from('profiles')
         .select('full_name, email').eq('id', data.leader_id).single();
@@ -62,13 +70,65 @@ export default function Account() {
     router.refresh();
   }
 
+  // Members paste whatever is in their address bar, or just their handle.
+  // Accept both and store one canonical https URL, which is what the database
+  // constraint and the display component expect.
+  function normalizeSocial(value, host) {
+    const raw = value.trim().replace(/\/+$/, '');
+    if (!raw) return { value: null };
+    const handle = raw.replace(/^@/, '');
+    if (/^[A-Za-z0-9._-]+$/.test(handle)) {
+      return { value: `https://www.${host}/${handle}` };
+    }
+    let url;
+    try {
+      url = new URL(raw.startsWith('http') ? raw : `https://${raw}`);
+    } catch {
+      return { error: 'That does not look like a link or a username.' };
+    }
+    if (!url.hostname.endsWith(host)) {
+      return { error: `That is not a ${host} link.` };
+    }
+    if (url.pathname === '/' || url.pathname === '') {
+      return { error: 'Add your profile, not just the site.' };
+    }
+    return { value: `https://${url.hostname}${url.pathname}` };
+  }
+
   async function save(e) {
-    e.preventDefault(); setErr(''); setMsg(''); setSaving(true);
+    e.preventDefault(); setErr(''); setMsg('');
+
+    const fb = normalizeSocial(facebookUrl, 'facebook.com');
+    const ig = normalizeSocial(instagramUrl, 'instagram.com');
+    const errors = {};
+    if (fb.error) errors.facebook = fb.error;
+    if (ig.error) errors.instagram = ig.error;
+    setFieldErrors(errors);
+    if (Object.keys(errors).length) return;
+
+    setSaving(true);
     const { error } = await supabase.from('profiles')
-      .update({ full_name: fullName, contact_number: contactNumber || null })
+      .update({
+        full_name: fullName,
+        contact_number: contactNumber || null,
+        facebook_url: fb.value,
+        instagram_url: ig.value,
+        show_contact: showContact,
+      })
       .eq('id', profile.id);
     setSaving(false);
     if (error) return setErr(error.message);
+
+    // Reflect the tidied-up values back into the form.
+    setFacebookUrl(fb.value || '');
+    setInstagramUrl(ig.value || '');
+    setProfile({
+      ...profile,
+      contact_number: contactNumber || null,
+      facebook_url: fb.value,
+      instagram_url: ig.value,
+      show_contact: showContact,
+    });
     setMsg('Saved.');
     router.refresh();
   }
@@ -93,6 +153,7 @@ export default function Account() {
         <div className="flex-1">
           <p className="font-medium">{profile.full_name}</p>
           <p className="text-sm text-ink/60">{profile.email}</p>
+          <SocialLinks profile={profile} className="mt-2" />
           <label className="btn-outline mt-3 inline-flex cursor-pointer">
             {uploading ? 'Uploading…' : 'Change photo'}
             <input type="file" accept="image/*" className="hidden" onChange={uploadAvatar} disabled={uploading} />
@@ -105,10 +166,46 @@ export default function Account() {
         <div><label className="label">Full name</label>
           <input className="input" value={fullName} onChange={e=>setFullName(e.target.value)} required /></div>
         <div><label className="label">Contact number</label>
-          <input className="input" placeholder="+63 9xx xxx xxxx"
-            value={contactNumber} onChange={e=>setContactNumber(e.target.value)} /></div>
+          <input className="input nums" placeholder="+63 917 555 0142" inputMode="tel"
+            value={contactNumber} onChange={e=>setContactNumber(e.target.value)} />
+          <label className="mt-2 flex items-center gap-2 text-sm text-ink/70">
+            <input type="checkbox" className="h-4 w-4 accent-brand"
+              checked={showContact} onChange={e=>setShowContact(e.target.checked)} />
+            Show my number to other members
+          </label>
+          <p className="mt-1 text-xs text-ink/45">
+            Leaders can always see it. Leave this off and nobody else will.
+          </p>
+        </div>
         <div><label className="label">Email</label>
           <input className="input bg-silver-light/50" value={profile.email} disabled /></div>
+
+        <fieldset className="space-y-4 border-t border-silver-light pt-4">
+          <legend className="sr-only">Social links</legend>
+          <p className="text-sm text-ink/60">
+            Add your socials so other members can find you. Paste a link or just your username.
+          </p>
+
+          <div>
+            <label className="label" htmlFor="facebook">Facebook</label>
+            <input id="facebook" className={`input ${fieldErrors.facebook ? 'input-error' : ''}`}
+              placeholder="facebook.com/yourname"
+              aria-invalid={Boolean(fieldErrors.facebook)}
+              aria-describedby={fieldErrors.facebook ? 'facebook-error' : undefined}
+              value={facebookUrl} onChange={e=>setFacebookUrl(e.target.value)} />
+            {fieldErrors.facebook && <p id="facebook-error" className="field-error">{fieldErrors.facebook}</p>}
+          </div>
+
+          <div>
+            <label className="label" htmlFor="instagram">Instagram</label>
+            <input id="instagram" className={`input ${fieldErrors.instagram ? 'input-error' : ''}`}
+              placeholder="@yourname"
+              aria-invalid={Boolean(fieldErrors.instagram)}
+              aria-describedby={fieldErrors.instagram ? 'instagram-error' : undefined}
+              value={instagramUrl} onChange={e=>setInstagramUrl(e.target.value)} />
+            {fieldErrors.instagram && <p id="instagram-error" className="field-error">{fieldErrors.instagram}</p>}
+          </div>
+        </fieldset>
         {(profile.role === 'super_admin' || profile.role === 'admin') && (
           <div className="flex gap-3 items-baseline">
             <span className="label mb-0">Role</span>

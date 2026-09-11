@@ -78,47 +78,39 @@
 }
 .plate img { object-fit: cover; }
 
-/* ---- layer 2: the arch aperture --------------------------------------- */
-/* REPLACE ME: swap this element for a Blender render and keep the class. */
+/* ---- layer 2: the aperture --------------------------------------------- */
+/* A wide film frame. The camera travels through it; the surrounding mat is the
+   huge spread shadow rather than a real element, so there is nothing to keep in
+   sync when the viewport changes.
+   REPLACE ME: swap this element for a Blender render and keep the class. */
 
-.arch-aperture {
-  width: min(92vw, 1180px);
-  height: min(118vh, 1020px);
-  border-radius: 999px 999px 40px 40px;
-  /* A thick wall with a hole in it: the ring is the masonry, the hole is
-     what the camera flies through. */
+.frame-aperture {
+  width: min(88vw, 1240px);
+  height: min(74vh, 720px);
+  border-radius: 26px;
   box-shadow:
     0 0 0 42vmax rgba(251, 250, 247, 0.97),
-    inset 0 0 90px rgba(38, 9, 13, 0.16);
-  border: 1px solid rgba(176, 141, 87, 0.4);
+    inset 0 0 90px rgba(38, 9, 13, 0.14);
+  border: 1px solid rgba(176, 141, 87, 0.34);
   opacity: calc(1 - var(--p) * 0.55);
 }
 
-/* ---- layer 3: gilt leading -------------------------------------------- */
+/* ---- layer 3: inner rule ----------------------------------------------- */
+/* A second frame just inside the first, which is what gives the opening its
+   sense of thickness as the camera passes through. */
 
-.arch-leading {
-  width: min(74vw, 880px);
-  height: min(92vh, 800px);
-  border-radius: 999px 999px 28px 28px;
-  border: 1px solid rgba(176, 141, 87, 0.55);
-  opacity: calc(0.9 - var(--p) * 0.9);
+.frame-inner {
+  width: min(78vw, 1080px);
+  height: min(63vh, 600px);
+  border-radius: 18px;
+  border: 1px solid rgba(176, 141, 87, 0.42);
+  opacity: calc(0.85 - var(--p) * 0.85);
 }
-.arch-leading::before,
-.arch-leading::after {
-  content: '';
-  position: absolute;
-  top: 18%;
-  bottom: 0;
-  width: 1px;
-  background: linear-gradient(180deg, rgba(176, 141, 87, 0.5), transparent);
-}
-.arch-leading::before { left: 33%; }
-.arch-leading::after  { right: 33%; }
 
 /* ---- layer 4: the content plane --------------------------------------- */
 
 .layer-content {
-  /* Content holds its ground while the architecture rushes past, then fades
+  /* Content holds its ground while the frame rushes past, then fades
      out as the camera arrives at the verse. */
   transform: translate3d(0, calc(var(--p) * -60px), calc(var(--p) * 90px));
   opacity: calc(1 - max(0, var(--p) - 0.62) * 2.6);
@@ -131,8 +123,8 @@
   gap: 0;
   padding: 0 1.5rem;
   text-align: center;
-  /* Sits inside the arch aperture, which is min(74vw, 880px) wide. */
-  max-width: min(64vw, 46rem);
+  /* Sits inside the aperture, which is min(88vw, 1240px) wide. */
+  max-width: min(58vw, 44rem);
 }
 @media (max-width: 900px) {
   .hero-copy { max-width: 100%; }
@@ -236,9 +228,7 @@
   .layer[data-depth='-520'] { --d: -300px; }
   .layer[data-depth='-260'] { --d: -150px; }
   .plate { transform: scale(1.2); }
-  .arch-aperture { box-shadow: 0 0 0 42vmax rgba(251, 250, 247, 0.97); }
-  .arch-leading::before,
-  .arch-leading::after { display: none; }
+  .frame-aperture { box-shadow: 0 0 0 42vmax rgba(251, 250, 247, 0.97); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -267,17 +257,17 @@
     radial-gradient(560px 420px at 92% 104%, rgba(38, 9, 13, 0.9), transparent 60%);
 }
 
-/* The arch from act one, reappearing as an outline behind the sign-off. */
-.footer-arch {
+/* The frame from act one, reappearing as an outline behind the sign-off. */
+.footer-frame {
   position: absolute;
   z-index: -1;
   left: 50%;
-  top: 8%;
-  width: min(80vw, 820px);
-  height: min(70vh, 620px);
+  top: 12%;
+  width: min(86vw, 1080px);
+  height: min(56vh, 480px);
   transform: translateX(-50%);
-  border: 1px solid rgba(176, 141, 87, 0.22);
-  border-radius: 999px 999px 24px 24px;
+  border: 1px solid rgba(176, 141, 87, 0.2);
+  border-radius: 22px;
   mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 100%);
 }
 

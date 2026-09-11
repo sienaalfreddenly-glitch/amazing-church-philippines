@@ -112,3 +112,25 @@ export const IconPhoto = (p) => (
     <path d="M8 6 9.5 3.5h5L16 6" />
   </Svg>
 );
+
+// Social and contact marks. Drawn to the same 1.75 stroke weight as the rest of
+// the set so they sit in a row with the others without looking borrowed.
+export const IconFacebook = (p) => (
+  <Svg {...p}>
+    <path d="M14.5 8.5V6.8c0-.8.4-1.3 1.4-1.3H17V3h-2.2c-2.2 0-3.3 1.2-3.3 3.4v2.1H10V11h1.5v10h3V11h2.1l.4-2.5z" />
+  </Svg>
+);
+
+export const IconInstagram = (p) => (
+  <Svg {...p}>
+    <rect x="3" y="3" width="18" height="18" rx="5" />
+    <circle cx="12" cy="12" r="4" />
+    <path d="M17.5 6.5h.01" />
+  </Svg>
+);
+
+export const IconPhone = (p) => (
+  <Svg {...p}>
+    <path d="M5 3h3l2 5-2.5 1.5a12 12 0 0 0 6 6L15 13l5 2v3a2 2 0 0 1-2.2 2A17 17 0 0 1 3 5.2 2 2 0 0 1 5 3z" />
+  </Svg>
+);

@@ -5,7 +5,7 @@ import ScrollScene from '@/components/ScrollScene';
 import { IconArrow } from '@/components/Icons';
 
 /**
- * Act one. The camera moves through a cathedral arch.
+ * Act one. The camera moves through a frame.
  *
  * The scene is five layers stacked on a shared Z axis inside one perspective
  * container. Scroll progress (--p, published by ScrollScene) drives a single
@@ -14,12 +14,12 @@ import { IconArrow } from '@/components/Icons';
  * a zoom.
  *
  *   depth  -900  photographic plate, furthest back
- *   depth  -520  arch aperture
- *   depth  -260  gilt leading
+ *   depth  -520  the aperture
+ *   depth  -260  inner rule
  *   depth     0  logo and headline
  *   depth   120  foreground vignette, passes the camera first
  *
- * TO SWAP IN A REAL RENDER: replace the .arch-aperture element with an <Image>
+ * TO SWAP IN A REAL RENDER: replace the .frame-aperture element with an <Image>
  * or a <video> of a Blender export. Keep the data-depth attribute and the
  * layer class; the transform maths does not care what is inside.
  */
@@ -34,14 +34,14 @@ export default function CinematicHero() {
           </div>
         </div>
 
-        {/* Layer 2: the arch the camera travels through. Replace with a render. */}
+        {/* Layer 2: the frame the camera travels through. Replace with a render. */}
         <div className="layer" data-depth="-520">
-          <div className="arch-aperture" aria-hidden="true" />
+          <div className="frame-aperture" aria-hidden="true" />
         </div>
 
-        {/* Layer 3: gilt leading, like the camework in a stained window. */}
+        {/* Layer 3: a second frame just inside the first, for thickness. */}
         <div className="layer" data-depth="-260">
-          <div className="arch-leading" aria-hidden="true" />
+          <div className="frame-inner" aria-hidden="true" />
         </div>
 
         {/* Layer 4: the content plane. */}

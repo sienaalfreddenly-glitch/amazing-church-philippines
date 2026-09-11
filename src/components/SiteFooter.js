@@ -5,8 +5,8 @@ import Reveal from '@/components/Reveal';
  * The final scene.
  *
  * Deliberately not a four-column link farm. It opens with one oversized line of
- * type carrying the church's own words, sets an arch silhouette behind it to
- * close the loop with the hero, and keeps the links to three honest groups.
+ * type carrying the church's own words, sets the hero frame behind it as an
+ * outline to close the loop, and keeps the links to three honest groups.
  * Every link animates its own gilt underline on hover and focus, so keyboard
  * users see the same feedback as mouse users.
  */
@@ -50,8 +50,8 @@ export default function SiteFooter() {
 
   return (
     <footer className="site-footer">
-      {/* Arch silhouette: the same shape the hero flew through, now closing. */}
-      <div aria-hidden="true" className="footer-arch" />
+      {/* The same frame the hero flew through, now closing the journey. */}
+      <div aria-hidden="true" className="footer-frame" />
 
       <div className="footer-inner">
         <Reveal>

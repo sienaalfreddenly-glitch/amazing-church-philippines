@@ -1,5 +1,6 @@
 import { createClient, getSessionAndProfile } from '@/lib/supabase-server';
 import Avatar from '@/components/Avatar';
+import SocialLinks from '@/components/SocialLinks';
 import MembersOnlyGate from '@/components/MembersOnlyGate';
 import { isApproved } from '@/lib/roles';
 
@@ -18,7 +19,7 @@ export default async function LeadersPage() {
   const supabase = createClient();
   const { data: people } = await supabase
     .from('profiles')
-    .select('id, full_name, email, avatar_url, role, leader_id, is_leader, contact_number')
+    .select('id, full_name, email, avatar_url, role, leader_id, is_leader, contact_number, facebook_url, instagram_url, show_contact')
     .eq('account_status', 'approved')
     .neq('role', 'super_admin')      // Super Admin doesn't appear on the org chart
     .order('full_name', { ascending: true });
@@ -83,7 +84,7 @@ function LeaderCard({ leader, team }) {
         <div>
           <p className="font-medium">{leader.full_name}</p>
           <p className="text-xs uppercase tracking-wide text-brand">Leader</p>
-          {leader.contact_number && <p className="text-xs text-ink/60">{leader.contact_number}</p>}
+          <SocialLinks profile={leader} className="mt-1.5" />
         </div>
       </div>
       <div className="pt-3">

@@ -58,10 +58,6 @@ module.exports = {
       maxWidth: {
         prose: '65ch',
       },
-      borderRadius: {
-        // Cathedral arch: a full semicircle on top, near-square at the base.
-        arch: '999px 999px 28px 28px',
-      },
     },
   },
   plugins: [],

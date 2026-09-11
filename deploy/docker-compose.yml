@@ -23,6 +23,9 @@ services:
       NEXT_PUBLIC_SUPABASE_URL: ${PUBLIC_ORIGIN}/supabase
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
       NEXT_PUBLIC_FACEBOOK_PAGE_URL: ${FACEBOOK_PAGE_URL}
+      # Server-side traffic goes straight to Supabase instead of out through
+      # the tunnel and back in, which is what was 500ing every image.
+      SUPABASE_INTERNAL_URL: http://host.docker.internal:54321
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
       ESV_API_KEY: ${ESV_API_KEY}
     extra_hosts:
@@ -43,9 +46,21 @@ services:
       - 'host.docker.internal:host-gateway'
     restart: unless-stopped
     ports:
-      # Bound to loopback only. Tailscale Funnel is what exposes this publicly,
-      # so the port must not be reachable from the local network directly.
+      # Bound to loopback only. The ngrok container is what exposes this
+      # publicly, so the port is not reachable from the local network directly.
       - '127.0.0.1:8091:8091'
+
+  # The public front door. A reserved ngrok domain keeps the same address
+  # across reboots, which a random free tunnel does not. Runs as a container so
+  # it comes back with everything else rather than needing a terminal open.
+  ngrok:
+    image: ngrok/ngrok:latest
+    depends_on:
+      - caddy
+    command: ['http', 'caddy:8091', '--domain', '${NGROK_DOMAIN}', '--log', 'stdout']
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+    restart: unless-stopped
 
 volumes:
   caddy-data:

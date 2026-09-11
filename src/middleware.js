@@ -1,14 +1,14 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
-
-const NGROK_BYPASS = { 'ngrok-skip-browser-warning': 'true' };
+import { SERVER_SUPABASE_URL, AUTH_STORAGE_KEY, TUNNEL_HEADERS } from '@/lib/supabase-config';
 
 export async function middleware(request) {
   let response = NextResponse.next({ request });
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    SERVER_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
+      auth: { storageKey: AUTH_STORAGE_KEY },
       cookies: {
         getAll() { return request.cookies.getAll(); },
         setAll(list) {
@@ -17,7 +17,7 @@ export async function middleware(request) {
           list.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
         },
       },
-      global: { headers: NGROK_BYPASS },
+      global: { headers: TUNNEL_HEADERS },
     }
   );
   const { data: { user } } = await supabase.auth.getUser();

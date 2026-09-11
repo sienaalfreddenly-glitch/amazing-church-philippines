@@ -1,5 +1,5 @@
-# Tailscale Funnel terminates TLS and forwards plain HTTP to this port, so Caddy
-# serves HTTP only. Do not expose this port to the internet directly.
+# ngrok terminates TLS and forwards plain HTTP to this port, so Caddy serves
+# HTTP only. Do not expose this port to the internet directly.
 http://:8091 {
 	encode zstd gzip
 
