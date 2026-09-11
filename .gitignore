@@ -51,3 +51,6 @@ supabase/.temp
 
 # Logs
 *.log
+
+# Deployment secrets
+deploy/.env

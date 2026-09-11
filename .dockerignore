@@ -1,0 +1,17 @@
+.git
+.next
+node_modules
+android
+ios
+mobile
+resources
+supabase/.branches
+supabase/.temp
+.env.local
+.env*.local
+npm-debug.log*
+*.apk
+*.aab
+PR_BODY.md
+deploy/caddy-data
+deploy/caddy-config

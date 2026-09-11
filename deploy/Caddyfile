@@ -1,0 +1,27 @@
+# Tailscale Funnel terminates TLS and forwards plain HTTP to this port, so Caddy
+# serves HTTP only. Do not expose this port to the internet directly.
+http://:8091 {
+	encode zstd gzip
+
+	# Supabase is served under a path on the same public origin rather than a
+	# second hostname. handle_path strips the /supabase prefix, so a browser
+	# call to https://<host>/supabase/auth/v1/token reaches Kong as
+	# /auth/v1/token. Keeping one origin also keeps auth cookies first-party.
+	handle_path /supabase/* {
+		# Kong is published on the host by the Supabase stack, which runs in its
+		# own compose project on a different Docker network.
+		reverse_proxy host.docker.internal:54321 {
+			# Realtime upgrades to a websocket; Caddy proxies that natively.
+			header_up Host {upstream_hostport}
+		}
+	}
+
+	handle {
+		reverse_proxy app:3000
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

@@ -46,8 +46,10 @@ enabled = true
 
 [auth]
 enabled = true
-site_url = "http://localhost:3000"
-additional_redirect_urls = ["http://localhost:3000"]
+# site_url is where password-reset and confirmation links point, so it must be
+# the public origin rather than localhost once the site is served publicly.
+site_url = "https://aytz.tailcc79ac.ts.net"
+additional_redirect_urls = ["https://aytz.tailcc79ac.ts.net", "http://localhost:3000"]
 jwt_expiry = 3600
 enable_signup = true
 
