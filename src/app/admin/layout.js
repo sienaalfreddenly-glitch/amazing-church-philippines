@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import AdminNav from '@/components/AdminNav';
 import { getSessionAndProfile } from '@/lib/supabase-server';
-import { isStaff, isAdmin } from '@/lib/roles';
+import { isStaff, isAdmin, roleLabel } from '@/lib/roles';
 
 /**
  * One shell for every admin page.
@@ -33,7 +33,7 @@ export default async function AdminLayout({ children }) {
           Behind the scenes
         </p>
         <p className="text-xs text-ink/45">
-          {profile.full_name} · {profile.role.replace('_', ' ')}
+          {profile.full_name} · {roleLabel(profile.role)}
         </p>
       </div>
 

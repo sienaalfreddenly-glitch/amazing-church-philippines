@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase-browser';
 import { useRouter } from 'next/navigation';
 import Avatar from '@/components/Avatar';
 import SocialLinks from '@/components/SocialLinks';
+import { roleLabel } from '@/lib/roles';
 import NotificationMutes from '@/components/NotificationMutes';
 
 export default function Account() {
@@ -204,7 +205,7 @@ export default function Account() {
         {(profile.role === 'super_admin' || profile.role === 'admin') && (
           <div className="flex gap-3 items-baseline">
             <span className="label mb-0">Role</span>
-            <span className="badge bg-silver-light">{profile.role.replace('_',' ')}</span>
+            <span className="badge bg-silver-light">{roleLabel(profile.role)}</span>
             <span className="label mb-0 ml-4">Status</span>
             <span className={`badge ${profile.account_status==='approved' ? 'bg-brand-50 text-brand-700' : 'bg-silver-light'}`}>
               {profile.account_status}
