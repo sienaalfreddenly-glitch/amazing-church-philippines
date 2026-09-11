@@ -9,6 +9,7 @@ export default function Signup() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
   const [leaderId, setLeaderId] = useState('');
   const [leaders, setLeaders] = useState([]);
   const [leadersFailed, setLeadersFailed] = useState(false);
@@ -42,6 +43,7 @@ export default function Signup() {
       options: {
         data: {
           full_name: fullName,
+          contact_number: phone.trim(),
           // Validated server-side by the trigger. An empty string means the
           // member did not choose, which is what alerts the leaders.
           leader_id: leaderId || null,
@@ -68,6 +70,24 @@ export default function Signup() {
         <div><label className="label" htmlFor="email">Email</label>
           <input id="email" className="input" type="email" autoComplete="email"
             value={email} onChange={e=>setEmail(e.target.value)} required /></div>
+
+        <div>
+          <label className="label" htmlFor="phone">Mobile number</label>
+          <input
+            id="phone"
+            className="input nums"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            required
+            placeholder="+63 917 555 0142"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+          <p className="mt-1 text-xs text-ink/45">
+            So a leader can reach you. Only you, your leader, and church staff can see it.
+          </p>
+        </div>
 
         <div><label className="label" htmlFor="password">Password</label>
           <input id="password" className="input" type="password" minLength={8} autoComplete="new-password"

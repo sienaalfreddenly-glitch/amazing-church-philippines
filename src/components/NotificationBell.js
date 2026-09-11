@@ -18,6 +18,7 @@ const KIND_TEXT = {
   new_discussion: 'started a discussion',
   new_news:       'posted an update',
   new_event:      'added an event',
+  event_interest: 'is coming to',
 };
 
 function linkFor(n) {
@@ -107,6 +108,7 @@ export default function NotificationBell() {
     else if (n.kind === 'mention')    suffix = ` ${n.entity_type}`;
     else if (n.kind === 'unassigned_member') suffix = '';
     else if (n.kind === 'ministry_interest') suffix = ` ${n.metadata?.ministry || 'a ministry'}`;
+    else if (n.kind === 'event_interest') suffix = ` ${n.metadata?.title || 'an event'}`;
     else if (n.kind?.startsWith('new_')) suffix = n.metadata?.title ? `: ${n.metadata.title}` : '';
     return `${who} ${verb}${suffix}`;
   }

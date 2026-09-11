@@ -521,3 +521,58 @@ html {
 .stack-l > * + * {
   margin-top: var(--gap-l);
 }
+
+/* ---------------------------------------------------------------------------
+ * Admin navigation.
+ *
+ * A scrolling tab strip rather than a wrapping pile of buttons. On a phone it
+ * scrolls sideways with the active tab always reachable; on a desktop it simply
+ * sits in a row.
+ * ------------------------------------------------------------------------ */
+
+.admin-nav {
+  border-bottom: 1px solid rgba(176, 141, 87, 0.25);
+}
+
+.admin-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0 0 0.5rem;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.admin-tabs::-webkit-scrollbar { display: none; }
+
+.admin-tab {
+  position: relative;
+  display: block;
+  white-space: nowrap;
+  padding: 0.5rem 0.875rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  color: rgba(26, 22, 20, 0.65);
+  text-decoration: none;
+  transition: background-color 200ms ease-out, color 200ms ease-out;
+}
+.admin-tab:hover {
+  background: rgba(237, 233, 229, 0.8);
+  color: var(--ink);
+}
+
+.admin-tab-active {
+  font-weight: 600;
+  color: var(--brand);
+  background: rgba(251, 245, 246, 0.9);
+}
+.admin-tab-active::after {
+  content: '';
+  position: absolute;
+  left: 0.875rem;
+  right: 0.875rem;
+  bottom: -0.5rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--brand);
+}

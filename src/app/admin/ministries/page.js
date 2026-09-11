@@ -44,7 +44,6 @@ export default async function AdminMinistriesPage() {
   return (
     <div className="space-y-8">
       <header>
-        <Link href="/admin" className="btn-quiet -ml-2 mb-6">Back to admin</Link>
         <h1 className="text-3xl sm:text-4xl">Ministries</h1>
         <p className="mt-2 max-w-prose text-ink/65">
           Put a leader in charge of each team. They will be the one notified when somebody

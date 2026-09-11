@@ -4,6 +4,7 @@ import Reveal from '@/components/Reveal';
 import Spotlight from '@/components/Spotlight';
 import MinistryInterestButton from '@/components/MinistryInterestButton';
 import { createClient, getSessionAndProfile } from '@/lib/supabase-server';
+import MembersOnlyGate from '@/components/MembersOnlyGate';
 import { isStaff } from '@/lib/roles';
 
 export const metadata = {
@@ -18,6 +19,19 @@ export const revalidate = 60;
 export default async function MinistriesPage() {
   const { user, profile } = await getSessionAndProfile();
   const approved = profile?.account_status === 'approved';
+
+  // Ministries are members-only. A visitor arriving on this URL directly would
+  // otherwise be handed an empty page, because the read is refused rather than
+  // filtered.
+  if (!approved && !isStaff(profile?.role)) {
+    return (
+      <MembersOnlyGate
+        title="Ministries"
+        description="See the teams you can serve with, and tell a leader which one interests you."
+      />
+    );
+  }
+
   const supabase = createClient();
 
   const { data: ministries } = await supabase

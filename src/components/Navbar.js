@@ -20,8 +20,9 @@ export default function Navbar({ profile }) {
         { href: '/events', label: 'Events' },
       ]
     : [
+        // Visitors see four things and no more. Everything else needs an account.
         { href: '/', label: 'Home' },
-        { href: '/ministries', label: 'Ministries' },
+        { href: '/news', label: 'News' },
         { href: '/events', label: 'Events' },
         { href: '/live', label: 'Live' },
       ];
@@ -34,9 +35,7 @@ export default function Navbar({ profile }) {
         { href: '/leaders', label: 'Leaders' },
         { href: '/org', label: 'Our household' },
       ]
-    : [
-        { href: '/news', label: 'News' },
-      ];
+    : [];
 
   // Kept out of More: staff reach for it often, and it is the one destination
   // where a click has consequences.

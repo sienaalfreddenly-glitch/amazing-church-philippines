@@ -4,6 +4,7 @@ import { isStaff, isAdmin } from '@/lib/roles';
 import ModerationActions from '@/components/ModerationActions';
 import TimeAgo from '@/components/TimeAgo';
 import Link from 'next/link';
+import PageHeader from '@/components/PageHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,29 +20,23 @@ export default async function AdminHome() {
   ]);
 
   return (
-    <div className="space-y-10">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="gilt-text text-[11px] font-semibold uppercase tracking-[0.3em]">Behind the scenes</p>
-          <h1 className="mt-3 text-4xl sm:text-5xl">Moderation</h1>
-          <p className="mt-3 text-sm text-ink/55">
-            Signed in as {profile.full_name} · {profile.role.replace('_',' ')}
-          </p>
-        </div>
-        {isAdmin(profile.role) && (
-          <div className="flex flex-wrap gap-2">
-            <Link href="/admin/users" className="btn-primary">Manage users</Link>
-            <Link href="/admin/news" className="btn-outline">News & Updates</Link>
-            <Link href="/admin/hero-slides" className="btn-outline">Hero slideshow</Link>
-            <Link href="/admin/courses" className="btn-outline">Courses</Link>
-            <Link href="/admin/events" className="btn-outline">Events</Link>
-          </div>
-        )}
-      </div>
+    <div className="stack-l">
+      <PageHeader
+        title="Queue"
+        lead="Everything waiting on you, in one place. Clear this and the rest of the site looks after itself."
+      />
 
       {isAdmin(profile.role) && (
         <section>
-          <h2 className="text-2xl mb-3">Pending accounts ({pendingUsers?.length || 0})</h2>
+          <h2 className="flex items-center gap-3 text-2xl">
+            Accounts waiting
+            <span className={`nums badge ${pendingUsers?.length ? 'bg-brand text-white' : 'bg-silver-light text-ink/60'}`}>
+              {pendingUsers?.length || 0}
+            </span>
+          </h2>
+          <p className="mt-1 text-sm text-ink/55">
+            New people cannot post until somebody here lets them in.
+          </p>
           <div className="space-y-3">
             {pendingUsers?.length ? pendingUsers.map(u => (
               <div key={u.id} className="card flex items-center justify-between">
@@ -51,13 +46,24 @@ export default async function AdminHome() {
                 </div>
                 <UserApproveButtons id={u.id} />
               </div>
-            )) : <p className="text-ink/60 text-sm">Nothing pending.</p>}
+            )) : <div className="card card-static py-10 text-center">
+                <p className="font-medium text-ink/75">Nothing waiting</p>
+                <p className="mt-1 text-sm text-ink/55">Every account has been dealt with.</p>
+              </div>}
           </div>
         </section>
       )}
 
       <section>
-        <h2 className="text-2xl mb-3">Pending posts ({pendingPosts?.length || 0})</h2>
+        <h2 className="flex items-center gap-3 text-2xl">
+          Posts waiting
+          <span className={`nums badge ${pendingPosts?.length ? 'bg-brand text-white' : 'bg-silver-light text-ink/60'}`}>
+            {pendingPosts?.length || 0}
+          </span>
+        </h2>
+        <p className="mt-1 mb-3 text-sm text-ink/55">
+          Held back until a moderator approves them. Nobody is notified until you do.
+        </p>
         <div className="space-y-3">
           {pendingPosts?.length ? pendingPosts.map(p => (
             <div key={p.id} className="card">
@@ -66,7 +72,10 @@ export default async function AdminHome() {
               <p className="mt-2 whitespace-pre-wrap">{p.body}</p>
               <ModerationActions kind="post" id={p.id} status={p.status} />
             </div>
-          )) : <p className="text-ink/60 text-sm">Nothing pending.</p>}
+          )) : <div className="card card-static py-10 text-center">
+                <p className="font-medium text-ink/75">Nothing waiting</p>
+                <p className="mt-1 text-sm text-ink/55">Every account has been dealt with.</p>
+              </div>}
         </div>
       </section>
 
@@ -80,7 +89,10 @@ export default async function AdminHome() {
               <p className="mt-2 whitespace-pre-wrap">{d.body}</p>
               <ModerationActions kind="discussion" id={d.id} status={d.status} />
             </div>
-          )) : <p className="text-ink/60 text-sm">Nothing pending.</p>}
+          )) : <div className="card card-static py-10 text-center">
+                <p className="font-medium text-ink/75">Nothing waiting</p>
+                <p className="mt-1 text-sm text-ink/55">Every account has been dealt with.</p>
+              </div>}
         </div>
       </section>
     </div>
