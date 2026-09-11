@@ -1,4 +1,5 @@
 import { createClient, getSessionAndProfile } from '@/lib/supabase-server';
+import { readVisitorId } from '@/lib/visitor';
 
 const TZ = 'Asia/Manila';
 
@@ -7,24 +8,31 @@ const TZ = 'Asia/Manila';
  *
  * Exactly two sections: the verse, and Today's Reminder. No lesson, no prayer.
  *
- * The content is claimed from the database by my_daily_content(), which assigns
- * the signed-in user a pair nobody else holds today and returns the same pair on
- * every refresh. Nothing is chosen here, so a reload cannot produce different
- * content and two readers cannot be handed the same verse.
+ * Everyone gets their own draw. There is no global verse of the day, so two
+ * readers may hold the same verse today, but never the same reminder. Members
+ * draw from the whole imported Bible; visitors only from verses tagged with the
+ * welcoming themes, because somebody's first encounter with this church should
+ * not be a random passage from Judges.
  *
- * Signed-out visitors see nothing. An assignment belongs to a person, and there
- * is no such thing as an anonymous one.
+ * Nothing is chosen here. The database claims the pairing and returns the same
+ * one on every refresh, so a reload cannot change what a reader sees.
  */
 export default async function DailyVerse() {
   const { user } = await getSessionAndProfile();
-  if (!user) return null;
-
   const supabase = createClient();
-  const { data, error } = await supabase.rpc('my_daily_content');
+
+  // A visitor id is created by the route handler, not here: a server component
+  // cannot set cookies. Until one exists this renders the invitation below.
+  const visitorId = user ? null : readVisitorId();
+
+  const { data, error } = user
+    ? await supabase.rpc('my_daily_content')
+    : visitorId
+      ? await supabase.rpc('visitor_daily_content', { p_visitor: visitorId })
+      : { data: null, error: null };
+
   const entry = Array.isArray(data) ? data[0] : data;
 
-  // Pool exhausted for today, or the call failed. Say so plainly rather than
-  // showing somebody else's verse or an empty box.
   if (error || !entry) {
     return (
       <section

@@ -46,7 +46,7 @@ export default function Navbar({ profile }) {
   return (
     <header className="sticky top-0 z-sticky nav-blur">
       <div className="shell relative flex h-16 items-center justify-between gap-4">
-        <Link href="/" className="shrink-0" aria-label="Amazing Church Philippines — home">
+        <Link href="/" className="shrink-0" aria-label="Amazing Church Philippines, home">
           <Image
             src="/logo.png"
             alt="Amazing Church Philippines"

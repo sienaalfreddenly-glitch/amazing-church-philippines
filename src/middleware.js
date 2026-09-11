@@ -22,6 +22,21 @@ export async function middleware(request) {
   );
   const { data: { user } } = await supabase.auth.getUser();
 
+  // Give anyone who is not signed in a visitor id, so they can be handed their
+  // own daily verse. A server component cannot set a cookie, and the middleware
+  // already owns the response, so this is the one place it can be minted. It is
+  // HttpOnly and server-generated: a browser can neither read it nor choose it.
+  if (!user && !request.cookies.get('acp_visitor')) {
+    // crypto is a global in the Edge runtime the middleware runs on; node:crypto is not available there.
+    response.cookies.set('acp_visitor', crypto.randomUUID(), {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 180,
+    });
+  }
+
   // Force change-password redirect when the flag is set
   if (user) {
     const path = request.nextUrl.pathname;
