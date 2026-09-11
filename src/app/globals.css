@@ -4,117 +4,230 @@
 
 /* Font families are injected by next/font in layout.js as
    --font-sans (Outfit) and --font-display (Fraunces). */
-:root {
-  --brand: #7A1F2B;
-  --brand-2: #B15564;
-  --silver: #C6C0BC;
-  --paper: #FBFAF7;
-  --ink: #1A1614;
-  --shadow-hue: 38, 9, 13;
-}
 
-html {
-  scroll-behavior: smooth;
-}
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+@layer base {
+  :root {
+    --brand: #7A1F2B;
+    --brand-2: #B15564;
+    --silver: #C6C0BC;
+    --paper: #FBFAF7;
+    --ink: #1A1614;
+    --shadow-hue: 38, 9, 13;
   }
+
+  html {
+    scroll-behavior: smooth;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  html, body { background: var(--paper); color: var(--ink); }
+  body {
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-feature-settings: 'ss01', 'cv01';
+    /* Off-centre radial washes — deliberately uneven, not a 45deg fade. */
+    background-image:
+      radial-gradient(900px 520px at 88% -180px, rgba(122,31,43,0.07), transparent 62%),
+      radial-gradient(700px 420px at -120px 260px, rgba(177,85,100,0.045), transparent 58%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display), Georgia, serif;
+    letter-spacing: -0.022em;
+    line-height: 1.08;
+    text-wrap: balance;
+  }
+  p { text-wrap: pretty; }
 }
 
-html, body { background: var(--paper); color: var(--ink); }
-body {
-  font-family: var(--font-sans), system-ui, sans-serif;
-  font-feature-settings: 'ss01', 'cv01';
-  /* Off-centre radial washes — deliberately uneven, not a 45deg fade. */
-  background-image:
-    radial-gradient(900px 520px at 88% -180px, rgba(122,31,43,0.07), transparent 62%),
-    radial-gradient(700px 420px at -120px 260px, rgba(177,85,100,0.045), transparent 58%);
-  background-attachment: fixed;
-}
+@layer components {
+  /* Fine grain overlay — breaks digital flatness without touching layout. */
+  .grain::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
 
-h1, h2, h3 {
-  font-family: var(--font-display), Georgia, serif;
-  letter-spacing: -0.022em;
-  line-height: 1.08;
-  text-wrap: balance;
-}
-p { text-wrap: pretty; }
+  /* Keyboard focus — one consistent ring across every interactive element. */
+  :where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
 
-/* Fine grain overlay — breaks digital flatness without touching layout. */
-.grain::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  pointer-events: none;
-  opacity: 0.035;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
-}
+  /* Skip link — visible only when focused. */
+  .skip-link {
+    @apply absolute left-4 -top-20 z-modal rounded-b-xl bg-brand px-4 py-2 text-sm font-semibold text-white
+           transition-transform focus:top-0;
+  }
 
-/* Keyboard focus — one consistent ring across every interactive element. */
-:where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
-  outline: 2px solid var(--brand);
-  outline-offset: 2px;
-  border-radius: 6px;
-}
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium
+           transition-all duration-200 ease-out active:translate-y-px active:scale-[0.985]
+           disabled:pointer-events-none disabled:opacity-50;
+  }
+  /* A lit top edge and a darker foot give the button a body rather than a fill. */
+  .btn-primary {
+    @apply btn text-white;
+    background-image: linear-gradient(180deg, #8A2532 0%, #7A1F2B 52%, #661923 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -1px 0 rgba(38, 9, 13, 0.5),
+      0 1px 2px rgba(38, 9, 13, 0.18),
+      0 6px 16px rgba(122, 31, 43, 0.26);
+  }
+  .btn-primary:hover {
+    @apply -translate-y-0.5;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      inset 0 -1px 0 rgba(38, 9, 13, 0.5),
+      0 2px 4px rgba(38, 9, 13, 0.2),
+      0 14px 30px rgba(122, 31, 43, 0.34);
+  }
+  .btn-primary:active {
+    box-shadow:
+      inset 0 2px 5px rgba(38, 9, 13, 0.45),
+      0 1px 2px rgba(38, 9, 13, 0.2);
+  }
+  /* Frosted rather than transparent, so it stays readable when it sits over a
+     hero photograph as well as over flat paper. */
+  .btn-outline { @apply btn border border-silver bg-white/80 text-ink backdrop-blur-sm hover:-translate-y-0.5 hover:border-silver-dark hover:bg-white; }
+  .btn-quiet   { @apply btn px-2 font-medium text-ink/80 underline decoration-silver-dark underline-offset-4 hover:text-brand hover:decoration-brand; }
+  .btn-danger  { @apply btn bg-brand-800 text-white hover:bg-brand-900; }
 
-/* Skip link — visible only when focused. */
-.skip-link {
-  @apply absolute left-4 -top-20 z-modal rounded-b-xl bg-brand px-4 py-2 text-sm font-semibold text-white
-         transition-transform focus:top-0;
-}
+  /* Cards — no border; a lit top edge plus a stacked shadow carries the
+     hierarchy. The rim highlight and the shadow agree on one light source
+     above the page, which is what makes the surface read as physically raised
+     rather than as a rectangle with a drop shadow behind it. */
+  .card {
+    @apply rounded-2xl bg-white p-5 shadow-soft transition-all duration-300 ease-out;
+    transform-style: preserve-3d;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      0 1px 2px rgba(38, 9, 13, 0.05),
+      0 4px 10px rgba(38, 9, 13, 0.04),
+      0 12px 28px rgba(38, 9, 13, 0.05);
+  }
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      0 2px 4px rgba(38, 9, 13, 0.06),
+      0 10px 22px rgba(38, 9, 13, 0.07),
+      0 28px 60px rgba(122, 31, 43, 0.12);
+  }
+  .card-static:hover { @apply shadow-soft; transform: none; }
 
-/* Buttons */
-.btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium
-         transition-all duration-200 ease-out active:translate-y-px active:scale-[0.985]
-         disabled:pointer-events-none disabled:opacity-50;
-}
-.btn-primary { @apply btn bg-brand text-white shadow-soft; }
-.btn-primary:hover { @apply -translate-y-0.5 bg-brand-600 shadow-lift; }
-/* Frosted rather than transparent, so it stays readable when it sits over a
-   hero photograph as well as over flat paper. */
-.btn-outline { @apply btn border border-silver bg-white/80 text-ink backdrop-blur-sm hover:-translate-y-0.5 hover:border-silver-dark hover:bg-white; }
-.btn-quiet   { @apply btn px-2 font-medium text-ink/80 underline decoration-silver-dark underline-offset-4 hover:text-brand hover:decoration-brand; }
-.btn-danger  { @apply btn bg-brand-800 text-white hover:bg-brand-900; }
+  /* Spotlight border: the card edge lights up under the cursor. --mx/--my are
+     written by the Spotlight wrapper on pointer move. */
+  .spotlight { position: relative; }
+  .spotlight::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    opacity: 0;
+    transition: opacity 300ms ease-out;
+    pointer-events: none;
+    background: radial-gradient(
+      220px circle at var(--mx, 50%) var(--my, 50%),
+      rgba(227, 201, 154, 0.95),
+      rgba(176, 141, 87, 0.35) 40%,
+      transparent 70%
+    );
+    /* Mask the fill so only the 1px ring is painted. */
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+  }
+  .spotlight:hover::before { opacity: 1; }
 
-/* Cards — no border by default; elevation alone carries the hierarchy. */
-.card {
-  @apply rounded-2xl bg-white p-5 shadow-soft transition-all duration-300;
-  transform-style: preserve-3d;
-}
-.card:hover { @apply shadow-lift; }
-.card-static:hover { @apply shadow-soft; }
-/* Flat variant for grouped content where elevation would be noise. */
-.card-flat { @apply rounded-2xl bg-white/70 p-5 ring-1 ring-silver-light transition-colors duration-300; }
-/* Pins a CTA to the card floor so button rows line up across variable content. */
-.card-body { @apply flex h-full flex-col; }
-.card-foot { @apply mt-auto pt-4; }
+  /* True glass: blur, a lit inner rim, and an inner shadow at the foot, so the
+     panel refracts at its edges instead of being a blurred rectangle. */
+  .glass {
+    backdrop-filter: saturate(160%) blur(14px);
+    background-color: rgba(251, 250, 247, 0.7);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.85),
+      inset 0 -1px 0 rgba(38, 9, 13, 0.07),
+      0 1px 18px rgba(38, 9, 13, 0.05);
+  }
 
-/* Form controls */
-.input {
-  @apply w-full rounded-xl border border-silver bg-white px-3.5 py-2.5 text-sm outline-none
-         transition-all placeholder:text-ink/35 focus:border-brand focus:ring-4 focus:ring-brand/10;
-}
-.input-error { @apply border-brand-600 focus:border-brand-600 focus:ring-brand-600/15; }
-.field-error { @apply mt-1.5 text-xs font-medium text-brand-700; }
-.label { @apply mb-1.5 block text-xs font-semibold tracking-[0.08em] text-ink/60; }
-/* Square-cornered badges read less like every other SaaS pill. */
-.badge { @apply inline-block rounded-md px-2 py-0.5 text-[11px] font-semibold tracking-wide; }
+  /* Gilt as a material, not a second accent colour. */
+  .gilt-text {
+    background-image: linear-gradient(96deg, #7A5C33 0%, #B08D57 28%, #E3C99A 48%, #B08D57 68%, #7A5C33 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .gilt-rule {
+    height: 1px;
+    border: 0;
+    background-image: linear-gradient(90deg, transparent, rgba(176, 141, 87, 0.75), transparent);
+  }
 
-/* Tabular figures for any counts, dates, and money. */
-.nums { font-variant-numeric: tabular-nums; letter-spacing: 0; }
+  /* Cathedral arch frame for imagery and feature panels. */
+  .arch { border-radius: 999px 999px 28px 28px; }
 
-/* Skeletons — shaped like the content they replace, not a spinner. */
-.skeleton {
-  @apply rounded-lg bg-silver-light;
-  background-image: linear-gradient(90deg, transparent, rgba(255,255,255,0.75), transparent);
-  background-size: 200% 100%;
-  animation: shimmer 1.6s linear infinite;
+  /* Scroll-driven entry, written to fail open: the element is visible unless
+     the Reveal wrapper has armed it, so content is never left hidden behind
+     JavaScript that did not run. Arming happens in an effect; data-shown then
+     flips once the element crosses the viewport. */
+  .reveal {
+    transition:
+      opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  .reveal[data-armed='true'][data-shown='false'] {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal[data-armed='true'][data-shown='false'] { opacity: 1; transform: none; }
+  }
+  /* Flat variant for grouped content where elevation would be noise. */
+  .card-flat { @apply rounded-2xl bg-white/70 p-5 ring-1 ring-silver-light transition-colors duration-300; }
+  /* Pins a CTA to the card floor so button rows line up across variable content. */
+  .card-body { @apply flex h-full flex-col; }
+  .card-foot { @apply mt-auto pt-4; }
+
+  /* Form controls */
+  .input {
+    @apply w-full rounded-xl border border-silver bg-white px-3.5 py-2.5 text-sm outline-none
+           transition-all placeholder:text-ink/35 focus:border-brand focus:ring-4 focus:ring-brand/10;
+  }
+  .input-error { @apply border-brand-600 focus:border-brand-600 focus:ring-brand-600/15; }
+  .field-error { @apply mt-1.5 text-xs font-medium text-brand-700; }
+  .label { @apply mb-1.5 block text-xs font-semibold tracking-[0.08em] text-ink/60; }
+  /* Square-cornered badges read less like every other SaaS pill. */
+  .badge { @apply inline-block rounded-md px-2 py-0.5 text-[11px] font-semibold tracking-wide; }
+
+  /* Tabular figures for any counts, dates, and money. */
+  .nums { font-variant-numeric: tabular-nums; letter-spacing: 0; }
+
+  /* Skeletons — shaped like the content they replace, not a spinner. */
+  .skeleton {
+    @apply rounded-lg bg-silver-light;
+    background-image: linear-gradient(90deg, transparent, rgba(255,255,255,0.75), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 1.6s linear infinite;
+  }
+
 }
 
 /* Utility animations */
@@ -163,17 +276,30 @@ p { text-wrap: pretty; }
 }
 .animate-fade-up { animation: fadeInUp 520ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 
-/* Sticky nav backdrop — inner hairline simulates edge refraction. */
-.nav-blur {
-  backdrop-filter: saturate(150%) blur(12px);
-  background-color: rgba(251,250,247,0.72);
-  box-shadow: inset 0 -1px 0 rgba(38,9,13,0.06), 0 1px 14px rgba(38,9,13,0.03);
-}
+@layer components {
+  /* Sticky nav: the glass panel plus a gilt hairline along its foot. */
+  .nav-blur {
+    backdrop-filter: saturate(160%) blur(14px);
+    background-color: rgba(251, 250, 247, 0.7);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.85),
+      inset 0 -1px 0 rgba(38, 9, 13, 0.07),
+      0 1px 18px rgba(38, 9, 13, 0.05);
+  }
+  .nav-blur::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 1px;
+    background-image: linear-gradient(90deg, transparent, rgba(176, 141, 87, 0.55) 20%, rgba(176, 141, 87, 0.55) 80%, transparent);
+  }
 
-/* Line clamp helper */
-.line-clamp-6 {
-  display: -webkit-box;
-  -webkit-line-clamp: 6;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  /* Line clamp helper */
+  .line-clamp-6 {
+    display: -webkit-box;
+    -webkit-line-clamp: 6;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }

@@ -13,7 +13,7 @@ const sans = Outfit({
 
 const display = Fraunces({
   subsets: ['latin'],
-  weight: ['600', '700', '800'],
+  weight: ['600', '700', '900'],
   variable: '--font-display',
   display: 'swap',
 });

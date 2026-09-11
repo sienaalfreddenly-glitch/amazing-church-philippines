@@ -26,7 +26,7 @@ export default async function DailyVerse() {
   return (
     <section
       aria-label="Verse of the day"
-      className="relative overflow-hidden rounded-3xl px-6 py-12 text-center text-white shadow-lift animate-fade-up sm:px-12 sm:py-16"
+      className="relative overflow-hidden rounded-3xl px-6 py-14 text-center text-white shadow-deep sm:px-12 sm:py-20"
       style={{
         // Three off-centre radial stops instead of one even linear fade, so the
         // surface has a light source rather than a uniform ramp.
@@ -47,8 +47,11 @@ export default async function DailyVerse() {
         }}
       />
 
+      {/* Gilt inset rule — a frame around scripture, the way a plaque is set. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-4 rounded-2xl border border-gilt/30 sm:inset-6" />
+
       <div className="relative">
-        <p className="nums text-[11px] font-semibold uppercase tracking-[0.32em] text-white/70">{prettyDate}</p>
+        <p className="nums text-[11px] font-semibold uppercase tracking-[0.32em] text-gilt-light/80">{prettyDate}</p>
 
         {/* The quote mark is positioned out of the text flow — as an inline
             glyph it inflated the first line box and opened a gap under it. */}
@@ -71,7 +74,9 @@ export default async function DailyVerse() {
           </blockquote>
         </div>
 
-        <p className="mt-6 flex flex-wrap items-center justify-center gap-2.5 text-sm font-semibold tracking-[0.06em] text-white/85">
+        <hr className="gilt-rule mx-auto mt-8 w-24" />
+
+        <p className="mt-5 flex flex-wrap items-center justify-center gap-2.5 text-sm font-semibold tracking-[0.06em] text-white/85">
           <span>{verse.reference}</span>
           {verse.translation && (
             <span className="badge bg-white/15 text-[10px] tracking-[0.14em] text-white/80">
