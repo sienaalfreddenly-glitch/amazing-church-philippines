@@ -2,51 +2,120 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap');
-
+/* Font families are injected by next/font in layout.js as
+   --font-sans (Outfit) and --font-display (Fraunces). */
 :root {
   --brand: #7A1F2B;
   --brand-2: #B15564;
-  --silver: #C9CACC;
+  --silver: #C6C0BC;
   --paper: #FBFAF7;
-  --ink: #141416;
+  --ink: #1A1614;
+  --shadow-hue: 38, 9, 13;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 html, body { background: var(--paper); color: var(--ink); }
 body {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-feature-settings: 'ss01', 'cv01';
+  /* Off-centre radial washes — deliberately uneven, not a 45deg fade. */
   background-image:
-    radial-gradient(1200px 500px at 90% -200px, rgba(122,31,43,0.06), transparent 60%),
-    radial-gradient(900px 400px at -100px 200px, rgba(177,85,100,0.05), transparent 60%);
+    radial-gradient(900px 520px at 88% -180px, rgba(122,31,43,0.07), transparent 62%),
+    radial-gradient(700px 420px at -120px 260px, rgba(177,85,100,0.045), transparent 58%);
   background-attachment: fixed;
 }
-h1, h2, h3 { font-family: 'Playfair Display', Georgia, serif; letter-spacing: -0.015em; }
+
+h1, h2, h3 {
+  font-family: var(--font-display), Georgia, serif;
+  letter-spacing: -0.022em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+p { text-wrap: pretty; }
+
+/* Fine grain overlay — breaks digital flatness without touching layout. */
+.grain::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Keyboard focus — one consistent ring across every interactive element. */
+:where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Skip link — visible only when focused. */
+.skip-link {
+  @apply absolute left-4 -top-20 z-modal rounded-b-xl bg-brand px-4 py-2 text-sm font-semibold text-white
+         transition-transform focus:top-0;
+}
 
 /* Buttons */
-.btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 active:scale-[0.97]; }
-.btn-primary { @apply btn text-white shadow-soft;
-  background-image: linear-gradient(135deg, #7A1F2B, #B15564);
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium
+         transition-all duration-200 ease-out active:translate-y-px active:scale-[0.985]
+         disabled:pointer-events-none disabled:opacity-50;
 }
-.btn-primary:hover { @apply -translate-y-0.5 shadow-md; filter: brightness(1.05); }
-.btn-outline { @apply btn border border-silver text-ink hover:bg-silver-light hover:-translate-y-0.5; }
-.btn-danger  { @apply btn bg-red-700 text-white hover:bg-red-800; }
+.btn-primary { @apply btn bg-brand text-white shadow-soft; }
+.btn-primary:hover { @apply -translate-y-0.5 bg-brand-600 shadow-lift; }
+/* Frosted rather than transparent, so it stays readable when it sits over a
+   hero photograph as well as over flat paper. */
+.btn-outline { @apply btn border border-silver bg-white/80 text-ink backdrop-blur-sm hover:-translate-y-0.5 hover:border-silver-dark hover:bg-white; }
+.btn-quiet   { @apply btn px-2 font-medium text-ink/80 underline decoration-silver-dark underline-offset-4 hover:text-brand hover:decoration-brand; }
+.btn-danger  { @apply btn bg-brand-800 text-white hover:bg-brand-900; }
 
-/* Cards */
+/* Cards — no border by default; elevation alone carries the hierarchy. */
 .card {
-  @apply bg-white rounded-2xl border border-silver-light p-5 transition-all duration-300;
-  box-shadow: 0 1px 2px rgba(20,20,22,0.03), 0 6px 20px rgba(20,20,22,0.04);
+  @apply rounded-2xl bg-white p-5 shadow-soft transition-all duration-300;
   transform-style: preserve-3d;
 }
-.card:hover {
-  box-shadow: 0 4px 8px rgba(20,20,22,0.06), 0 20px 40px rgba(122,31,43,0.08);
-}
-.card-static:hover { box-shadow: 0 1px 2px rgba(20,20,22,0.03), 0 6px 20px rgba(20,20,22,0.04); }
+.card:hover { @apply shadow-lift; }
+.card-static:hover { @apply shadow-soft; }
+/* Flat variant for grouped content where elevation would be noise. */
+.card-flat { @apply rounded-2xl bg-white/70 p-5 ring-1 ring-silver-light transition-colors duration-300; }
+/* Pins a CTA to the card floor so button rows line up across variable content. */
+.card-body { @apply flex h-full flex-col; }
+.card-foot { @apply mt-auto pt-4; }
 
 /* Form controls */
-.input { @apply w-full rounded-xl border border-silver bg-white px-3.5 py-2.5 text-sm outline-none transition-all
-                focus:border-brand focus:ring-4 focus:ring-brand/10; }
-.label { @apply block text-xs font-semibold uppercase tracking-wider text-ink/60 mb-1.5; }
-.badge { @apply inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold; }
+.input {
+  @apply w-full rounded-xl border border-silver bg-white px-3.5 py-2.5 text-sm outline-none
+         transition-all placeholder:text-ink/35 focus:border-brand focus:ring-4 focus:ring-brand/10;
+}
+.input-error { @apply border-brand-600 focus:border-brand-600 focus:ring-brand-600/15; }
+.field-error { @apply mt-1.5 text-xs font-medium text-brand-700; }
+.label { @apply mb-1.5 block text-xs font-semibold tracking-[0.08em] text-ink/60; }
+/* Square-cornered badges read less like every other SaaS pill. */
+.badge { @apply inline-block rounded-md px-2 py-0.5 text-[11px] font-semibold tracking-wide; }
+
+/* Tabular figures for any counts, dates, and money. */
+.nums { font-variant-numeric: tabular-nums; letter-spacing: 0; }
+
+/* Skeletons — shaped like the content they replace, not a spinner. */
+.skeleton {
+  @apply rounded-lg bg-silver-light;
+  background-image: linear-gradient(90deg, transparent, rgba(255,255,255,0.75), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
 
 /* Utility animations */
 @keyframes pop {
@@ -87,16 +156,18 @@ h1, h2, h3 { font-family: 'Playfair Display', Georgia, serif; letter-spacing: -0
 }
 .animate-floaty { animation: floaty 5s ease-in-out infinite; }
 
+/* Staggered entry — translate + opacity only, both GPU-composited. */
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.animate-fade-up { animation: fadeInUp 400ms ease-out both; }
+.animate-fade-up { animation: fadeInUp 520ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 
-/* Sticky nav backdrop */
+/* Sticky nav backdrop — inner hairline simulates edge refraction. */
 .nav-blur {
-  backdrop-filter: saturate(140%) blur(8px);
-  background-color: rgba(255,255,255,0.75);
+  backdrop-filter: saturate(150%) blur(12px);
+  background-color: rgba(251,250,247,0.72);
+  box-shadow: inset 0 -1px 0 rgba(38,9,13,0.06), 0 1px 14px rgba(38,9,13,0.03);
 }
 
 /* Line clamp helper */

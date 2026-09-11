@@ -3,7 +3,9 @@ import { useRef } from 'react';
 
 // Wraps children in a container that tilts in 3D as the mouse moves over it.
 // max = maximum tilt angle in degrees; scale bumps slightly on hover.
-export default function Tilt3D({ children, max = 8, scale = 1.02, className = '' }) {
+// fill = stretch the wrapper and its inner layer to the full height of the
+// grid cell, so cards of differing content length still line up at the bottom.
+export default function Tilt3D({ children, max = 8, scale = 1.02, className = '', fill = false }) {
   const ref = useRef(null);
   const innerRef = useRef(null);
 
@@ -25,8 +27,9 @@ export default function Tilt3D({ children, max = 8, scale = 1.02, className = ''
 
   return (
     <div ref={ref} onMouseMove={onMove} onMouseLeave={onLeave}
-      className={`[perspective:900px] ${className}`}>
-      <div ref={innerRef} className="transition-transform duration-200 ease-out will-change-transform">
+      className={`[perspective:900px] ${fill ? 'h-full' : ''} ${className}`}>
+      <div ref={innerRef}
+        className={`transition-transform duration-200 ease-out will-change-transform ${fill ? 'h-full' : ''}`}>
         {children}
       </div>
     </div>

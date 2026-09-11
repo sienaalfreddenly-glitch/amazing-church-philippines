@@ -17,20 +17,34 @@ module.exports = {
           800: '#3A0E14',
           900: '#26090D',
         },
+        // Warm neutral ramp — hue-matched to `paper` so grays never read blue.
         silver: {
-          DEFAULT: '#C9CACC',
-          light:   '#EEEFF1',
-          dark:    '#9A9CA0',
+          DEFAULT: '#C6C0BC',
+          light:   '#EDE9E5',
+          dark:    '#96908B',
         },
-        ink: '#141416',
+        ink: '#1A1614',
         paper: '#FBFAF7',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Playfair Display', 'Georgia', 'serif'],
+        sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
+        display: ['var(--font-display)', 'Georgia', 'serif'],
       },
       boxShadow: {
-        soft: '0 2px 12px rgba(20,20,22,0.06)',
+        // Shadows carry the brand hue instead of neutral black.
+        soft:  '0 1px 2px rgba(38,9,13,0.04), 0 6px 20px rgba(38,9,13,0.05)',
+        lift:  '0 4px 10px rgba(38,9,13,0.06), 0 22px 45px rgba(122,31,43,0.10)',
+        inset: 'inset 0 1px 0 rgba(255,255,255,0.55)',
+      },
+      zIndex: {
+        base: '0',
+        raised: '10',
+        sticky: '30',
+        overlay: '40',
+        modal: '50',
+      },
+      maxWidth: {
+        prose: '65ch',
       },
     },
   },

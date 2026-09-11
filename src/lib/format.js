@@ -21,3 +21,32 @@ export function timeAgo(input) {
   }
   return new Date(input).toLocaleDateString();
 }
+
+const CHURCH_TZ = 'Asia/Manila';
+
+/**
+ * Event date/time pinned to Manila so the server render and the client
+ * hydration agree regardless of the reader's own timezone.
+ */
+export function eventDate(input, opts = {}) {
+  if (!input) return '';
+  const d = new Date(input);
+  if (Number.isNaN(d.getTime())) return '';
+  return new Intl.DateTimeFormat('en-PH', {
+    timeZone: CHURCH_TZ,
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    ...opts,
+  }).format(d);
+}
+
+/** Day-number and month for compact date blocks, e.g. { day: '14', month: 'Sep' }. */
+export function eventDateParts(input) {
+  const d = new Date(input);
+  if (Number.isNaN(d.getTime())) return { day: '', month: '' };
+  const fmt = (options) => new Intl.DateTimeFormat('en-PH', { timeZone: CHURCH_TZ, ...options }).format(d);
+  return { day: fmt({ day: 'numeric' }), month: fmt({ month: 'short' }) };
+}
