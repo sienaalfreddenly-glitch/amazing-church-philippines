@@ -16,6 +16,24 @@ http://:8091 {
 		}
 	}
 
+	# Supabase's own API paths, accepted at the root as well as under /supabase.
+	#
+	# The Vercel deployment was built with NEXT_PUBLIC_SUPABASE_URL set to the
+	# bare domain, so its browser calls arrive as /auth/v1/token rather than
+	# /supabase/auth/v1/token and were being handed to Next.js, which answered
+	# 404 and showed the reader "Failed to fetch". Routing these prefixes to
+	# Kong as well makes both address shapes work, so the site is correct
+	# whichever build a visitor loaded.
+	#
+	# Safe because the application owns no route under any of these prefixes.
+	# handle, not handle_path: Kong expects the full path here.
+	@supabase_api path /auth/v1/* /rest/v1/* /storage/v1/* /realtime/v1/* /functions/v1/*
+	handle @supabase_api {
+		reverse_proxy host.docker.internal:54321 {
+			header_up Host {upstream_hostport}
+		}
+	}
+
 	handle {
 		reverse_proxy app:3000
 	}
