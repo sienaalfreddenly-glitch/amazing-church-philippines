@@ -19,10 +19,16 @@ export default async function LeadersPage() {
   const supabase = createClient();
   const { data: people } = await supabase
     .from('profiles')
-    .select('id, full_name, email, avatar_url, role, leader_id, is_leader, contact_number, facebook_url, instagram_url, show_contact')
+    .select('id, full_name, email, avatar_url, role, leader_id, is_leader, title, facebook_url, instagram_url')
     .eq('account_status', 'approved')
     .neq('role', 'super_admin')      // Super Admin doesn't appear on the org chart
     .order('full_name', { ascending: true });
+
+  // One call returns every number this viewer may see: their own, their group's,
+  // or all of them for staff. Merged in below so SocialLinks can render it.
+  const { data: contacts } = await supabase.rpc('visible_contacts');
+  const contactById = new Map((contacts || []).map(c => [c.id, c.contact_number]));
+  for (const p of people || []) p.contact_number = contactById.get(p.id) || null;
 
   const roster = people || [];
   const byLeader = new Map();

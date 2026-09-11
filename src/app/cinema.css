@@ -394,3 +394,90 @@
 html {
   overflow-x: clip;
 }
+
+/* ---------------------------------------------------------------------------
+ * Organisation chart.
+ *
+ * An indented tree rather than the usual boxes-and-connectors diagram: a church
+ * hierarchy is deep and lopsided, and a horizontal chart of it either scrolls
+ * sideways forever or shrinks the names past reading. The connector lines are
+ * drawn with borders on the list, so nothing has to be positioned by hand and
+ * it reflows correctly on a phone.
+ * ------------------------------------------------------------------------ */
+
+.org-tree,
+.org-children {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.org-children {
+  margin-left: 1.25rem;
+  padding-left: 1.5rem;
+  /* The vertical spine each child hangs from. */
+  border-left: 1px solid rgba(176, 141, 87, 0.35);
+}
+@media (min-width: 640px) {
+  .org-children { margin-left: 1.75rem; padding-left: 2rem; }
+}
+
+.org-node { position: relative; margin-top: 0.75rem; }
+
+/* The elbow joining a child to its parent's spine. */
+.org-children > .org-node::before {
+  content: '';
+  position: absolute;
+  left: -2rem;
+  top: 1.75rem;
+  width: 2rem;
+  height: 1px;
+  background: rgba(176, 141, 87, 0.35);
+}
+@media (max-width: 639px) {
+  .org-children > .org-node::before { left: -1.5rem; width: 1.5rem; }
+}
+
+.org-card {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(38, 9, 13, 0.05),
+    0 6px 16px rgba(38, 9, 13, 0.04);
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 260ms ease-out;
+}
+.org-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 2px 4px rgba(38, 9, 13, 0.06),
+    0 14px 30px rgba(122, 31, 43, 0.1);
+}
+
+/* The pastor sits at the root and is weighted accordingly. */
+.org-card-root {
+  padding: 1.125rem 1.25rem;
+  border-radius: 18px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 2px 6px rgba(38, 9, 13, 0.07),
+    0 18px 40px rgba(122, 31, 43, 0.13);
+}
+.org-card-root::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  border: 1px solid rgba(176, 141, 87, 0.4);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .org-card { transition: none; }
+  .org-card:hover { transform: none; }
+}

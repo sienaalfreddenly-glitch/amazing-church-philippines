@@ -18,7 +18,6 @@ export default function Account() {
   const [contactNumber, setContactNumber] = useState('');
   const [facebookUrl, setFacebookUrl] = useState('');
   const [instagramUrl, setInstagramUrl] = useState('');
-  const [showContact, setShowContact] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const [leader, setLeader] = useState(null);
   const [latestLesson, setLatestLesson] = useState(null);
@@ -26,14 +25,16 @@ export default function Account() {
   useEffect(() => { (async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.push('/login'); return; }
-    const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+    const { data, error } = await supabase.from('profiles').select('id, full_name, email, role, account_status, avatar_url, leader_id, created_at, is_leader, must_change_password, facebook_url, instagram_url, title, terms_accepted_at, terms_accepted_version').eq('id', user.id).single();
     if (error || !data) { setErr(error?.message || 'Profile not found. Run the updated schema in Supabase.'); setLoading(false); return; }
     setProfile(data);
     setFullName(data.full_name || '');
-    setContactNumber(data.contact_number || '');
+    // contact_number is not readable through the profiles table any more.
+    // This function returns it only to the member, their leader, or staff.
+    const { data: myNumber } = await supabase.rpc('profile_contact', { target: user.id });
+    setContactNumber(myNumber || '');
     setFacebookUrl(data.facebook_url || '');
     setInstagramUrl(data.instagram_url || '');
-    setShowContact(Boolean(data.show_contact));
     if (data.leader_id) {
       const { data: ld } = await supabase.from('profiles')
         .select('full_name, email').eq('id', data.leader_id).single();
@@ -113,7 +114,6 @@ export default function Account() {
         contact_number: contactNumber || null,
         facebook_url: fb.value,
         instagram_url: ig.value,
-        show_contact: showContact,
       })
       .eq('id', profile.id);
     setSaving(false);
@@ -127,7 +127,6 @@ export default function Account() {
       contact_number: contactNumber || null,
       facebook_url: fb.value,
       instagram_url: ig.value,
-      show_contact: showContact,
     });
     setMsg('Saved.');
     router.refresh();
@@ -153,7 +152,7 @@ export default function Account() {
         <div className="flex-1">
           <p className="font-medium">{profile.full_name}</p>
           <p className="text-sm text-ink/60">{profile.email}</p>
-          <SocialLinks profile={profile} className="mt-2" />
+          <SocialLinks profile={{ ...profile, contact_number: contactNumber }} className="mt-2" />
           <label className="btn-outline mt-3 inline-flex cursor-pointer">
             {uploading ? 'Uploading…' : 'Change photo'}
             <input type="file" accept="image/*" className="hidden" onChange={uploadAvatar} disabled={uploading} />
@@ -168,13 +167,8 @@ export default function Account() {
         <div><label className="label">Contact number</label>
           <input className="input nums" placeholder="+63 917 555 0142" inputMode="tel"
             value={contactNumber} onChange={e=>setContactNumber(e.target.value)} />
-          <label className="mt-2 flex items-center gap-2 text-sm text-ink/70">
-            <input type="checkbox" className="h-4 w-4 accent-brand"
-              checked={showContact} onChange={e=>setShowContact(e.target.checked)} />
-            Show my number to other members
-          </label>
-          <p className="mt-1 text-xs text-ink/45">
-            Leaders can always see it. Leave this off and nobody else will.
+          <p className="mt-1.5 text-xs text-ink/45">
+            Only you, your leader, and church staff can see this. Other members cannot.
           </p>
         </div>
         <div><label className="label">Email</label>

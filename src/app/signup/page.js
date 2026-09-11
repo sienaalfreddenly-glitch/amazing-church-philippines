@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase-browser';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { AGREEMENT_VERSION, AGREEMENT_POINTS } from '@/lib/agreement';
 
 export default function Signup() {
   const [fullName, setFullName] = useState('');
@@ -11,6 +12,7 @@ export default function Signup() {
   const [leaderId, setLeaderId] = useState('');
   const [leaders, setLeaders] = useState([]);
   const [leadersFailed, setLeadersFailed] = useState(false);
+  const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -25,7 +27,15 @@ export default function Signup() {
   })(); }, []);
 
   async function submit(e) {
-    e.preventDefault(); setError(''); setLoading(true);
+    e.preventDefault(); setError('');
+
+    // Belt and braces: the button is disabled until this is ticked, but a
+    // disabled button is a hint, not a control.
+    if (!accepted) {
+      setError('Please read and accept the agreement before creating an account.');
+      return;
+    }
+    setLoading(true);
     const supabase = createClient();
     const { error: signUpError } = await supabase.auth.signUp({
       email, password,
@@ -35,6 +45,9 @@ export default function Signup() {
           // Validated server-side by the trigger. An empty string means the
           // member did not choose, which is what alerts the leaders.
           leader_id: leaderId || null,
+          // Recorded on the profile by the signup trigger, so there is a record
+          // of who accepted which version and when.
+          terms_accepted_version: AGREEMENT_VERSION,
         },
       },
     });
@@ -89,9 +102,40 @@ export default function Signup() {
           )}
         </div>
 
+        {/* The agreement, in full, before the tick box. Nobody can honestly
+            accept something they were only given a link to. */}
+        <section className="rounded-xl bg-paper p-4 ring-1 ring-silver-light">
+          <h2 className="text-sm font-semibold text-ink">How we use your information</h2>
+          <ul className="mt-2 space-y-1.5 text-sm text-ink/70">
+            {AGREEMENT_POINTS.map((point) => (
+              <li key={point} className="flex gap-2">
+                <span aria-hidden="true" className="mt-2 h-1 w-1 shrink-0 rounded-full bg-gilt" />
+                <span>{point}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-xs text-ink/50">
+            The full text is in our{' '}
+            <Link href="/privacy" className="text-brand underline underline-offset-4">privacy</Link>
+            {' '}and{' '}
+            <Link href="/terms" className="text-brand underline underline-offset-4">terms</Link> pages.
+          </p>
+
+          <label className="mt-4 flex items-start gap-2.5 text-sm">
+            <input
+              type="checkbox"
+              required
+              className="mt-0.5 h-4 w-4 shrink-0 accent-brand"
+              checked={accepted}
+              onChange={(e) => setAccepted(e.target.checked)}
+            />
+            <span>I have read and agree to how my information is used.</span>
+          </label>
+        </section>
+
         {error && <p className="field-error text-sm">{error}</p>}
 
-        <button disabled={loading} className="btn-primary w-full">
+        <button disabled={loading || !accepted} className="btn-primary w-full">
           {loading ? 'Creating…' : 'Create account'}
         </button>
       </form>

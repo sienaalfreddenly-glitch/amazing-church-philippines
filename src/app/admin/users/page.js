@@ -15,13 +15,18 @@ export default async function ManageUsers() {
   const [{ data: users, error }, { data: allCompletions }] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id, full_name, email, avatar_url, role, account_status, contact_number, leader_id, is_leader, created_at')
+      .select('id, full_name, email, avatar_url, role, account_status, leader_id, is_leader, title, created_at')
       .order('created_at', { ascending: false }),
     // Latest lesson completion per user — one row per completion, we pick the newest per user
     supabase.from('lesson_completions')
       .select('verified_at, enrollment:enrollments(user_id), lesson:course_lessons(title, ord, course:courses(code))')
       .order('verified_at', { ascending: false }),
   ]);
+
+  // Phone numbers are no longer readable through the profiles table. Staff get
+  // all of them from this one call rather than a query per row.
+  const { data: contacts } = await supabase.rpc('visible_contacts');
+  const contactById = new Map((contacts || []).map(c => [c.id, c.contact_number]));
 
   const list = users || [];
   const leaders = list.filter(u => u.is_leader);
@@ -82,7 +87,7 @@ export default async function ManageUsers() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-ink/70 whitespace-nowrap">
-                      {u.contact_number || <span className="text-ink/30">—</span>}
+                      {contactById.get(u.id) || <span className="text-ink/30">—</span>}
                     </td>
                     <td className="px-4 py-3">
                       <AutoForm action="/api/admin/set-role">

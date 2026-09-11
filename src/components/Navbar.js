@@ -16,6 +16,7 @@ export default function Navbar({ profile }) {
         { href: '/feed', label: 'Feed' },
         { href: '/discussions', label: 'Discussions' },
         { href: '/leaders', label: 'Leaders' },
+        { href: '/org', label: 'Org chart' },
         { href: '/courses', label: 'Courses' },
         { href: '/events', label: 'Events' },
         { href: '/live', label: 'Live' },

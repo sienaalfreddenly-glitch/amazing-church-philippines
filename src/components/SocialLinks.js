@@ -4,8 +4,9 @@ import { IconFacebook, IconInstagram, IconPhone } from '@/components/Icons';
  * A member's social and contact links.
  *
  * Renders nothing at all when a profile has none set, so callers can drop it in
- * without guarding first. The phone number appears only when the member has
- * opted in via show_contact.
+ * without guarding first. A phone number is only ever present here when the
+ * database judged the viewer entitled to it, so this component does no
+ * permission checking of its own.
  */
 export default function SocialLinks({ profile, size = 18, className = '' }) {
   if (!profile) return null;
@@ -18,7 +19,9 @@ export default function SocialLinks({ profile, size = 18, className = '' }) {
   if (profile.instagram_url) {
     links.push({ href: profile.instagram_url, Icon: IconInstagram, label: 'Instagram', external: true });
   }
-  if (profile.show_contact && profile.contact_number) {
+  // contact_number reaches this component only when the database decided the
+  // viewer may see it, so there is no flag to check here.
+  if (profile.contact_number) {
     links.push({
       // tel: strips spaces so the dialler gets a clean number.
       href: `tel:${profile.contact_number.replace(/[^\d+]/g, '')}`,

@@ -23,7 +23,7 @@ export default function PostComposer({ kind = 'post' }) {
   useEffect(() => { (async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+    const { data } = await supabase.from('profiles').select('id, full_name, email, role, account_status, avatar_url, leader_id, created_at, is_leader, must_change_password, facebook_url, instagram_url, title, terms_accepted_at, terms_accepted_version').eq('id', user.id).single();
     setProfile(data);
   })(); }, [supabase]);
 

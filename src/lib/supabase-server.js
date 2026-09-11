@@ -44,6 +44,6 @@ export async function getSessionAndProfile() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { user: null, profile: null };
   const { data: profile } = await supabase
-    .from('profiles').select('*').eq('id', user.id).single();
+    .from('profiles').select('id, full_name, email, role, account_status, avatar_url, leader_id, created_at, is_leader, must_change_password, facebook_url, instagram_url, title, terms_accepted_at, terms_accepted_version').eq('id', user.id).single();
   return { user, profile };
 }

@@ -15,7 +15,7 @@ export default async function AdminHome() {
   const [{ data: pendingPosts }, { data: pendingDiscussions }, { data: pendingUsers }] = await Promise.all([
     supabase.from('posts').select('*, author:profiles!posts_author_id_fkey(full_name)').eq('status','pending').order('created_at'),
     supabase.from('discussions').select('*, author:profiles!discussions_author_id_fkey(full_name)').eq('status','pending').order('created_at'),
-    supabase.from('profiles').select('*').eq('account_status','pending').order('created_at'),
+    supabase.from('profiles').select('id, full_name, email, role, account_status, avatar_url, leader_id, created_at, is_leader, must_change_password, facebook_url, instagram_url, title, terms_accepted_at, terms_accepted_version').eq('account_status','pending').order('created_at'),
   ]);
 
   return (
