@@ -3,9 +3,10 @@
 # Run from the repository root:
 #   docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
 #
-# The Supabase containers are NOT defined here. They are managed separately and
-# already publish Kong on host port 54321; Caddy proxies to them through
-# host.docker.internal. See deploy/README.md.
+# The Supabase containers are NOT defined here. They are managed separately in
+# their own compose project. This stack joins that project's network and talks
+# to Kong container-to-container, so it does not depend on Kong's published host
+# port staying alive across restarts. See deploy/README.md.
 
 services:
   app:
@@ -25,14 +26,15 @@ services:
       NEXT_PUBLIC_FACEBOOK_PAGE_URL: ${FACEBOOK_PAGE_URL}
       # Server-side traffic goes straight to Supabase instead of out through
       # the tunnel and back in, which is what was 500ing every image.
-      SUPABASE_INTERNAL_URL: http://host.docker.internal:54321
+      SUPABASE_INTERNAL_URL: http://supabase_kong_amazing-church:8000
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
       ESV_API_KEY: ${ESV_API_KEY}
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'
     restart: unless-stopped
     expose:
       - '3000'
+    networks:
+      - default
+      - supabase
 
   caddy:
     image: caddy:2-alpine
@@ -42,13 +44,14 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
       - caddy-config:/config
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'
     restart: unless-stopped
     ports:
       # Bound to loopback only. The ngrok container is what exposes this
       # publicly, so the port is not reachable from the local network directly.
       - '127.0.0.1:8091:8091'
+    networks:
+      - default
+      - supabase
 
   # The public front door. A reserved ngrok domain keeps the same address
   # across reboots, which a random free tunnel does not. Runs as a container so
@@ -61,6 +64,13 @@ services:
     environment:
       NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
     restart: unless-stopped
+
+networks:
+  # Created and owned by the Supabase compose project, joined here so Caddy and
+  # the app can reach Kong by container name.
+  supabase:
+    external: true
+    name: supabase_network_amazing-church
 
 volumes:
   caddy-data:

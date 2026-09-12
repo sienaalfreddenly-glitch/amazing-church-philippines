@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { createClient as createSbClient } from '@supabase/supabase-js';
-import { SERVER_SUPABASE_URL, AUTH_STORAGE_KEY, TUNNEL_HEADERS } from './supabase-config';
+import { SERVER_SUPABASE_URL, AUTH_STORAGE_KEY, TUNNEL_HEADERS, timeoutFetch } from './supabase-config';
 
 export function createClient() {
   const cookieStore = cookies();
@@ -21,7 +21,7 @@ export function createClient() {
           catch { /* Server Component; ignore */ }
         },
       },
-      global: { headers: TUNNEL_HEADERS },
+      global: { headers: TUNNEL_HEADERS, fetch: timeoutFetch() },
     }
   );
 }
@@ -34,7 +34,7 @@ export function createAdminClient() {
     process.env.SUPABASE_SERVICE_ROLE_KEY,
     {
       auth: { autoRefreshToken: false, persistSession: false },
-      global: { headers: TUNNEL_HEADERS },
+      global: { headers: TUNNEL_HEADERS, fetch: timeoutFetch() },
     }
   );
 }

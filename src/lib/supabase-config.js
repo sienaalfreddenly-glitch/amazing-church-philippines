@@ -34,3 +34,19 @@ export const AUTH_STORAGE_KEY = 'sb-amazing-church-auth-token';
  * and media. This header opts out of it, and is harmless on any other host.
  */
 export const TUNNEL_HEADERS = { 'ngrok-skip-browser-warning': 'true' };
+
+/**
+ * How long a server-side Supabase call may hang before it is given up on.
+ *
+ * The middleware runs on every request, so a stalled upstream there takes the
+ * whole site down rather than degrading it: supabase-js retries with backoff
+ * and the platform kills the middleware with "Middleware has timed out". A
+ * bounded fetch turns that outage into a signed-out render.
+ */
+export const UPSTREAM_TIMEOUT_MS = 5000;
+
+/** fetch that gives up after `ms`, unless the caller passed its own signal. */
+export function timeoutFetch(ms = UPSTREAM_TIMEOUT_MS) {
+  return (input, init = {}) =>
+    fetch(input, { ...init, signal: init.signal ?? AbortSignal.timeout(ms) });
+}
