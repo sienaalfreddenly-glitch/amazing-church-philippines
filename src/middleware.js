@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
-import { SERVER_SUPABASE_URL, AUTH_STORAGE_KEY, TUNNEL_HEADERS } from '@/lib/supabase-config';
+import { SERVER_SUPABASE_URL, AUTH_STORAGE_KEY, TUNNEL_HEADERS, timeoutFetch } from '@/lib/supabase-config';
 
 export async function middleware(request) {
   let response = NextResponse.next({ request });
@@ -17,10 +17,19 @@ export async function middleware(request) {
           list.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
         },
       },
-      global: { headers: TUNNEL_HEADERS },
+      global: { headers: TUNNEL_HEADERS, fetch: timeoutFetch() },
     }
   );
-  const { data: { user } } = await supabase.auth.getUser();
+
+  // Never let a slow or down Supabase take the site with it. This runs on every
+  // request, so an unbounded call here is a site-wide outage; treating the
+  // failure as "not signed in" degrades to the anonymous page instead.
+  let user = null;
+  try {
+    ({ data: { user } } = await supabase.auth.getUser());
+  } catch {
+    user = null;
+  }
 
   // Give anyone who is not signed in a visitor id, so they can be handed their
   // own daily verse. A server component cannot set a cookie, and the middleware
@@ -49,10 +58,15 @@ export async function middleware(request) {
       path === '/login' ||
       path === '/logout';
     if (!isSafe) {
-      const { data: profile } = await supabase
-        .from('profiles').select('must_change_password').eq('id', user.id).maybeSingle();
-      if (profile?.must_change_password) {
-        return NextResponse.redirect(new URL('/account/change-password', request.url));
+      try {
+        const { data: profile } = await supabase
+          .from('profiles').select('must_change_password').eq('id', user.id).maybeSingle();
+        if (profile?.must_change_password) {
+          return NextResponse.redirect(new URL('/account/change-password', request.url));
+        }
+      } catch {
+        // Same reasoning as above: a stalled lookup must not block the request.
+        // Missing the redirect on one page load is recoverable; a timeout is not.
       }
     }
   }

@@ -8,9 +8,12 @@ http://:8091 {
 	# call to https://<host>/supabase/auth/v1/token reaches Kong as
 	# /auth/v1/token. Keeping one origin also keeps auth cookies first-party.
 	handle_path /supabase/* {
-		# Kong is published on the host by the Supabase stack, which runs in its
-		# own compose project on a different Docker network.
-		reverse_proxy host.docker.internal:54321 {
+		# Kong is reached over the Supabase compose project's own Docker network,
+		# which this stack joins as an external network. Going container-to-
+		# container rather than back out through the host's published port means
+		# a Kong restart cannot leave a dead port forward behind, which took the
+		# site down: every server-side auth call 502'd and the middleware timed out.
+		reverse_proxy supabase_kong_amazing-church:8000 {
 			# Realtime upgrades to a websocket; Caddy proxies that natively.
 			header_up Host {upstream_hostport}
 		}
@@ -29,7 +32,7 @@ http://:8091 {
 	# handle, not handle_path: Kong expects the full path here.
 	@supabase_api path /auth/v1/* /rest/v1/* /storage/v1/* /realtime/v1/* /functions/v1/*
 	handle @supabase_api {
-		reverse_proxy host.docker.internal:54321 {
+		reverse_proxy supabase_kong_amazing-church:8000 {
 			header_up Host {upstream_hostport}
 		}
 	}
