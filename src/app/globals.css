@@ -193,8 +193,21 @@
       0 1px 18px rgba(38, 9, 13, 0.05);
   }
 
-  /* Gilt as a material, not a second accent colour. */
+  /* Gilt as a material, not a second accent colour.
+   *
+   * Two variants because gold on white and gold on maroon want opposite ends
+   * of the tonal range. The base class is the darker "burnished" gilt that
+   * reads on the light page (eyebrows on /leaders, /news, /ministries, etc.).
+   * .gilt-text-bright is the shimmery gilt for dark surfaces (footer, verse
+   * card, hero, Community panel), where the burnished version would look
+   * muddy. Nothing else changes: both clip a gradient onto the text. */
   .gilt-text {
+    background-image: linear-gradient(96deg, #5A3E14 0%, #7A5528 28%, #A17A3C 48%, #7A5528 68%, #5A3E14 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .gilt-text-bright {
     background-image: linear-gradient(96deg, #7A5C33 0%, #B08D57 28%, #E3C99A 48%, #B08D57 68%, #7A5C33 100%);
     -webkit-background-clip: text;
     background-clip: text;

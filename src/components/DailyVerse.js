@@ -76,7 +76,7 @@ export default async function DailyVerse() {
       <div aria-hidden="true" className="pointer-events-none absolute inset-4 rounded-2xl border border-gilt/30 sm:inset-6" />
 
       <div className="relative">
-        <h2 id="daily-verse-heading" className="gilt-text text-[11px] font-semibold uppercase tracking-[0.32em]">
+        <h2 id="daily-verse-heading" className="gilt-text-bright text-[11px] font-semibold uppercase tracking-[0.32em]">
           Daily Bible Verse
         </h2>
         <p className="nums mt-2 text-[11px] font-medium uppercase tracking-[0.2em] text-white/50">

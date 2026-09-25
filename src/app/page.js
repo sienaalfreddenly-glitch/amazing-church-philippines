@@ -202,7 +202,7 @@ export default async function Home() {
                       'radial-gradient(360px 280px at 94% 98%, rgba(38,9,13,0.7), transparent 62%)',
                   }}
                 >
-                  <p className="gilt-text text-[11px] font-semibold uppercase tracking-[0.26em]">{communityEyebrow}</p>
+                  <p className="gilt-text-bright text-[11px] font-semibold uppercase tracking-[0.26em]">{communityEyebrow}</p>
                   <h3 className="mt-2 text-2xl text-white">{communityHeading}</h3>
                   <p className="mt-2 max-w-prose text-sm text-white/70 whitespace-pre-line">
                     {communityBody}

@@ -37,7 +37,20 @@ export default async function LeadersPage() {
     if (!byLeader.has(k)) byLeader.set(k, []);
     byLeader.get(k).push(p);
   }
-  const leadersList = roster.filter(p => p.is_leader);
+  // Rank church roles so Head Pastor appears above Pastor above Leader,
+  // regardless of alphabetical order. Anyone without a title still counts as
+  // a Leader if flagged.
+  const rankOf = (t) => {
+    const s = (t || '').toLowerCase();
+    if (s.startsWith('head pastor')) return 0;
+    if (s.startsWith('pastor'))      return 1;
+    return 2; // Leader (default) and anything else
+  };
+  const labelOf = (p) => p.title || (p.is_leader ? 'Leader' : 'Member');
+
+  const leadersList = roster
+    .filter(p => p.is_leader)
+    .sort((a, b) => rankOf(a.title) - rankOf(b.title) || a.full_name.localeCompare(b.full_name));
   const unassigned = roster.filter(p => !p.leader_id && !p.is_leader);
 
   return (
@@ -59,13 +72,18 @@ export default async function LeadersPage() {
 
       <div className="grid md:grid-cols-2 gap-6">
         {leadersList.map(leader => (
-          <LeaderCard key={leader.id} leader={leader} team={byLeader.get(leader.id) || []} />
+          <LeaderCard
+            key={leader.id}
+            leader={leader}
+            team={byLeader.get(leader.id) || []}
+            labelOf={labelOf}
+          />
         ))}
       </div>
 
       {unassigned.length > 0 && (
         <section>
-          <h2 className="text-xl mb-3">Disciples without a leader</h2>
+          <h2 className="text-xl mb-3">Members without a leader</h2>
           <div className="card">
             <ul className="divide-y divide-silver-light">
               {unassigned.map(p => (
@@ -75,7 +93,7 @@ export default async function LeadersPage() {
                     <p className="text-sm font-medium">{p.full_name}</p>
                     <p className="text-xs text-ink/60">{p.email}</p>
                   </div>
-                  <span className="badge bg-silver-light text-ink/70">Disciple</span>
+                  <span className="badge bg-silver-light text-ink/70">{labelOf(p)}</span>
                 </li>
               ))}
             </ul>
@@ -86,20 +104,20 @@ export default async function LeadersPage() {
   );
 }
 
-function LeaderCard({ leader, team }) {
+function LeaderCard({ leader, team, labelOf }) {
   return (
     <div className="card">
       <div className="flex items-center gap-3 pb-3 border-b border-silver-light">
         <Avatar url={leader.avatar_url} name={leader.full_name} size={56} />
         <div>
           <p className="font-medium">{leader.full_name}</p>
-          <p className="text-xs uppercase tracking-wide text-brand">Leader</p>
+          <p className="text-xs uppercase tracking-wide text-brand">{labelOf(leader)}</p>
           <SocialLinks profile={leader} className="mt-1.5" />
         </div>
       </div>
       <div className="pt-3">
         <p className="text-xs uppercase tracking-wide text-ink/50 mb-2">
-          Disciples ({team.length})
+          Members ({team.length})
         </p>
         {team.length ? (
           <ul className="space-y-2">
@@ -111,13 +129,13 @@ function LeaderCard({ leader, team }) {
                   <p className="text-xs text-ink/60 truncate">{m.contact_number || m.email}</p>
                 </div>
                 <span className="badge bg-silver-light text-ink/70 text-xs">
-                  {m.is_leader ? 'Leader' : 'Disciple'}
+                  {labelOf(m)}
                 </span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-ink/50">No disciples assigned yet.</p>
+          <p className="text-sm text-ink/50">Nobody assigned yet.</p>
         )}
       </div>
     </div>

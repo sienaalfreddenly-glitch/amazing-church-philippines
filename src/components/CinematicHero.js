@@ -58,7 +58,7 @@ export default function CinematicHero() {
 
             <p className="eyebrow">
               <span aria-hidden="true" className="eyebrow-rule" />
-              <span className="gilt-text">Welcome home</span>
+              <span className="gilt-text-bright">Welcome home</span>
               <span aria-hidden="true" className="eyebrow-rule" />
             </p>
 

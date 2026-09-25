@@ -141,13 +141,20 @@ export default async function ManageUsers() {
 
                 <AutoForm action="/api/admin/set-leader-flag">
                   <input type="hidden" name="id" value={u.id} />
-                  <label className="label" htmlFor={`leader-${u.id}`}>Leads a group</label>
-                  <select id={`leader-${u.id}`} name="is_leader" defaultValue={u.is_leader ? 'true' : 'false'} className="input">
-                    <option value="false">No</option>
-                    <option value="true">Yes</option>
+                  <label className="label" htmlFor={`role-church-${u.id}`}>Church role</label>
+                  <select
+                    id={`role-church-${u.id}`}
+                    name="church_role"
+                    defaultValue={u.is_leader ? (u.title || 'Leader') : 'Member'}
+                    className="input"
+                  >
+                    <option value="Head Pastor">Head Pastor</option>
+                    <option value="Pastor">Pastor</option>
+                    <option value="Leader">Leader</option>
+                    <option value="Member">Member</option>
                   </select>
                   <p className="mt-1 text-xs text-ink/45">
-                    Yes puts them in the household chart and the leader lists.
+                    Head Pastor, Pastor and Leader all lead a group; Member does not.
                   </p>
                 </AutoForm>
 

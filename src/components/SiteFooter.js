@@ -61,7 +61,7 @@ export default async function SiteFooter() {
 
       <div className="footer-inner">
         <Reveal>
-          <p className="footer-eyebrow gilt-text">{eyebrow}</p>
+          <p className="footer-eyebrow gilt-text-bright">{eyebrow}</p>
           <p className="footer-statement">{statement}</p>
         </Reveal>
 
