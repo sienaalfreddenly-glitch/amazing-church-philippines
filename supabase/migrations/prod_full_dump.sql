@@ -359,6 +359,31 @@ $_$;
 
 
 --
+-- Name: list_leaders(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE OR REPLACE FUNCTION public.list_leaders() RETURNS TABLE(id uuid, full_name text, title text)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  select p.id, p.full_name, p.title
+  from public.profiles p
+  where p.is_leader = true
+    and p.account_status = 'approved'
+    and p.is_hidden = false
+    and p.role <> 'super_admin'
+  order by
+    -- Pastors first, then everyone else, then alphabetical inside each band.
+    case
+      when p.title ilike 'head pastor%' then 0
+      when p.title ilike 'pastor%'      then 1
+      else 2
+    end,
+    p.full_name;
+$$;
+
+
+--
 -- Name: ministry_team(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 

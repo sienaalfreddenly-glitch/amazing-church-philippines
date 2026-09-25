@@ -189,6 +189,7 @@ as $$
   where p.is_leader = true
     and p.account_status = 'approved'
     and p.is_hidden = false
+    and p.role <> 'super_admin'
   order by
     case
       when p.title ilike 'head pastor%' then 0
