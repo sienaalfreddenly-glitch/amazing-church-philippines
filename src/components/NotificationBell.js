@@ -19,6 +19,10 @@ const KIND_TEXT = {
   new_news:       'posted an update',
   new_event:      'added an event',
   event_interest: 'is coming to',
+  // Church promoted somebody. The actor row is whoever pressed the button,
+  // but the notification reads about the promoted person because that is
+  // what everybody cares about.
+  promoted: 'has been raised up as a',
 };
 
 function linkFor(n) {
@@ -110,6 +114,11 @@ export default function NotificationBell() {
     else if (n.kind === 'ministry_interest') suffix = ` ${n.metadata?.ministry || 'a ministry'}`;
     else if (n.kind === 'event_interest') suffix = ` ${n.metadata?.title || 'an event'}`;
     else if (n.kind?.startsWith('new_')) suffix = n.metadata?.title ? `: ${n.metadata.title}` : '';
+    else if (n.kind === 'promoted') {
+      const name = n.metadata?.full_name || 'A member';
+      const to   = n.metadata?.to || 'leader';
+      return `${name} has been raised up as a ${to}. Rejoice with the household.`;
+    }
     return `${who} ${verb}${suffix}`;
   }
 

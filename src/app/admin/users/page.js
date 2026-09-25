@@ -1,6 +1,6 @@
 import { createClient, getSessionAndProfile } from '@/lib/supabase-server';
 import { redirect } from 'next/navigation';
-import { isAdmin, roleLabel, statusLabel } from '@/lib/roles';
+import { isAdmin, roleLabel, statusLabel, nextPromotionFor, householdLabel } from '@/lib/roles';
 import Avatar from '@/components/Avatar';
 import AutoForm from '@/components/AutoForm';
 import PageHeader from '@/components/PageHeader';
@@ -178,6 +178,31 @@ export default async function ManageUsers() {
                   )}
                 </AutoForm>
               </div>
+
+              {/* Promotion.
+                  Silent on rows the viewer cannot promote (either because the
+                  target is already at the top of their possible ladder, or
+                  because the viewer is not a Head Pastor / Pastor / Leader /
+                  Super Admin). The database enforces the same check server
+                  side; this is the visible shortcut. */}
+              {(() => {
+                const next = nextPromotionFor(profile, u);
+                if (!next || isSelf) return null;
+                return (
+                  <form
+                    action="/api/admin/promote"
+                    method="post"
+                    className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-brand-50/60 px-4 py-3 ring-1 ring-brand-100"
+                  >
+                    <input type="hidden" name="id" value={u.id} />
+                    <input type="hidden" name="to" value={next} />
+                    <p className="text-sm text-ink/70">
+                      Now a <strong>{householdLabel(u)}</strong>. Ready to shepherd more?
+                    </p>
+                    <button className="btn-primary">Promote to {next}</button>
+                  </form>
+                );
+              })()}
 
               {/* Account actions and progress */}
               <div className="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-silver-light pt-4">

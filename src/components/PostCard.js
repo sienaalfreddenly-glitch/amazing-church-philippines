@@ -44,11 +44,24 @@ function Media({ url, authorName }) {
 }
 
 function Byline({ item, size = 40 }) {
+  // A system post is written by the church, not by a member. The real author
+  // still owns the row (for RLS and moderation) but nobody sees their name;
+  // the byline reads as Amazing Church Philippines with the church avatar.
+  const isSystem = !!item.is_system;
+  const name = isSystem ? 'Amazing Church Philippines' : (item.author?.full_name || 'Member');
+  const avatar = isSystem ? '/logo.png' : item.author?.avatar_url;
   return (
     <div className="flex items-center gap-3">
-      <Avatar url={item.author?.avatar_url} name={item.author?.full_name || ''} size={size} />
+      <Avatar url={avatar} name={name} size={size} />
       <div className="min-w-0">
-        <p className="truncate text-sm font-medium">{item.author?.full_name || 'Member'}</p>
+        <p className="flex items-center gap-2 truncate text-sm font-medium">
+          {name}
+          {isSystem && (
+            <span className="badge bg-brand-50 text-brand-700 text-[10px] uppercase tracking-wide">
+              Church
+            </span>
+          )}
+        </p>
         <p className="text-xs text-ink/50"><TimeAgo date={item.created_at} /></p>
       </div>
     </div>

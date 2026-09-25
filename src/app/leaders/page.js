@@ -2,7 +2,7 @@ import { createClient, getSessionAndProfile } from '@/lib/supabase-server';
 import Avatar from '@/components/Avatar';
 import SocialLinks from '@/components/SocialLinks';
 import MembersOnlyGate from '@/components/MembersOnlyGate';
-import { isApproved } from '@/lib/roles';
+import { isApproved, householdLabel } from '@/lib/roles';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,7 +23,7 @@ const rankOf = (t) => {
   if (s === 'leader')              return 2;
   return 3; // Disciple / untitled
 };
-const labelOf = (p) => p.title || (p.is_leader ? 'Leader' : 'Disciple');
+const labelOf = householdLabel;
 
 export default async function LeadersPage() {
   const { user, profile } = await getSessionAndProfile();
