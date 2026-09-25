@@ -9,8 +9,56 @@ s = open(path, encoding='utf-8').read()
 s = s.replace('DO $ BEGIN', 'DO $ddo$ BEGIN')
 s = s.replace('END $;', 'END $ddo$;')
 
-# CREATE TABLE public.X (  -> CREATE TABLE IF NOT EXISTS public.X (
-s = re.sub(r'^CREATE TABLE (public\.[A-Za-z_0-9]+) \(', r'CREATE TABLE IF NOT EXISTS \1 (', s, flags=re.M)
+# CREATE TABLE public.X ( ... );  ->  idempotent block:
+#   CREATE TABLE IF NOT EXISTS public.X (...);
+#   ALTER TABLE public.X ADD COLUMN IF NOT EXISTS col type;  -- per column
+# So an existing prod table that lacks new columns picks them up instead of
+# being skipped whole by IF NOT EXISTS.
+def rewrite_create_table(m):
+    table = m.group(1)
+    body = m.group(2)
+    # Split columns at top-level commas (not inside parens).
+    cols = []
+    depth = 0
+    cur = ''
+    for ch in body:
+        if ch == '(':
+            depth += 1
+        elif ch == ')':
+            depth -= 1
+        if ch == ',' and depth == 0:
+            cols.append(cur.strip())
+            cur = ''
+        else:
+            cur += ch
+    if cur.strip():
+        cols.append(cur.strip())
+
+    alters = []
+    for c in cols:
+        # Skip table-level constraints (PRIMARY KEY, UNIQUE, CHECK, FOREIGN, CONSTRAINT).
+        head = c.lstrip().split(None, 1)[0].upper() if c.strip() else ''
+        if head in ('PRIMARY', 'UNIQUE', 'CHECK', 'FOREIGN', 'CONSTRAINT', 'EXCLUDE', 'LIKE'):
+            continue
+        # column-name (quoted or bare) then rest is type + attrs.
+        col_m = re.match(r'("[^"]+"|\S+)\s+(.+)', c, flags=re.S)
+        if not col_m:
+            continue
+        col_name = col_m.group(1)
+        col_def  = col_m.group(2)
+        alters.append(f'ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col_name} {col_def};')
+
+    out = f'CREATE TABLE IF NOT EXISTS {table} ({body});'
+    if alters:
+        out += '\n' + '\n'.join(alters)
+    return out
+
+s = re.sub(
+    r'^CREATE TABLE (public\.[A-Za-z_0-9]+) \(([\s\S]*?)\n\);',
+    rewrite_create_table,
+    s,
+    flags=re.M,
+)
 
 # CREATE INDEX / CREATE UNIQUE INDEX
 s = re.sub(r'^CREATE INDEX ', 'CREATE INDEX IF NOT EXISTS ', s, flags=re.M)

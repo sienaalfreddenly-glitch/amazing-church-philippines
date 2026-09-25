@@ -1041,8 +1041,11 @@ CREATE TABLE IF NOT EXISTS public.bible_books (
     book_order smallint NOT NULL,
     testament text NOT NULL,
     chapters smallint NOT NULL,
-    CONSTRAINT bible_books_testament_check CHECK ((testament = ANY (ARRAY['OT'::text, 'NT'::text])))
-);
+    CONSTRAINT bible_books_testament_check CHECK ((testament = ANY (ARRAY['OT'::text, 'NT'::text]))));
+ALTER TABLE public.bible_books ADD COLUMN IF NOT EXISTS name text NOT NULL;
+ALTER TABLE public.bible_books ADD COLUMN IF NOT EXISTS book_order smallint NOT NULL;
+ALTER TABLE public.bible_books ADD COLUMN IF NOT EXISTS testament text NOT NULL;
+ALTER TABLE public.bible_books ADD COLUMN IF NOT EXISTS chapters smallint NOT NULL;
 
 
 --
@@ -1057,8 +1060,14 @@ CREATE TABLE IF NOT EXISTS public.comments (
     body text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     mentions uuid[] DEFAULT '{}'::uuid[] NOT NULL,
-    CONSTRAINT comments_entity_type_check CHECK ((entity_type = ANY (ARRAY['post'::text, 'discussion'::text])))
-);
+    CONSTRAINT comments_entity_type_check CHECK ((entity_type = ANY (ARRAY['post'::text, 'discussion'::text]))));
+ALTER TABLE public.comments ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid() NOT NULL;
+ALTER TABLE public.comments ADD COLUMN IF NOT EXISTS entity_type text NOT NULL;
+ALTER TABLE public.comments ADD COLUMN IF NOT EXISTS entity_id uuid NOT NULL;
+ALTER TABLE public.comments ADD COLUMN IF NOT EXISTS author_id uuid NOT NULL;
+ALTER TABLE public.comments ADD COLUMN IF NOT EXISTS body text NOT NULL;
+ALTER TABLE public.comments ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now() NOT NULL;
+ALTER TABLE public.comments ADD COLUMN IF NOT EXISTS mentions uuid[] DEFAULT '{}'::uuid[] NOT NULL;
 
 
 --
@@ -1079,8 +1088,21 @@ CREATE TABLE IF NOT EXISTS public.course_lessons (
     assignment_body text,
     assignment_due_at timestamp with time zone,
     todo_items text[] DEFAULT '{}'::text[] NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
-);
+    created_at timestamp with time zone DEFAULT now() NOT NULL);
+ALTER TABLE public.course_lessons ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid() NOT NULL;
+ALTER TABLE public.course_lessons ADD COLUMN IF NOT EXISTS course_id uuid NOT NULL;
+ALTER TABLE public.course_lessons ADD COLUMN IF NOT EXISTS ord integer DEFAULT 1 NOT NULL;
+ALTER TABLE public.course_lessons ADD COLUMN IF NOT EXISTS title text NOT NULL;
+ALTER TABLE public.course_lessons ADD COLUMN IF NOT EXISTS description text;
+ALTER TABLE public.course_lessons ADD COLUMN IF NOT EXISTS meeting_at timestamp with time zone;
+ALTER TABLE public.course_lessons ADD COLUMN IF NOT EXISTS meeting_url text;
+ALTER TABLE public.course_lessons ADD COLUMN IF NOT EXISTS meeting_location text;
+ALTER TABLE public.course_lessons ADD COLUMN IF NOT EXISTS slides_url text;
+ALTER TABLE public.course_lessons ADD COLUMN IF NOT EXISTS assignment_title text;
+ALTER TABLE public.course_lessons ADD COLUMN IF NOT EXISTS assignment_body text;
+ALTER TABLE public.course_lessons ADD COLUMN IF NOT EXISTS assignment_due_at timestamp with time zone;
+ALTER TABLE public.course_lessons ADD COLUMN IF NOT EXISTS todo_items text[] DEFAULT '{}'::text[] NOT NULL;
+ALTER TABLE public.course_lessons ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now() NOT NULL;
 
 
 --
@@ -1094,8 +1116,14 @@ CREATE TABLE IF NOT EXISTS public.courses (
     description text,
     prereq_id uuid,
     is_active boolean DEFAULT true NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
-);
+    created_at timestamp with time zone DEFAULT now() NOT NULL);
+ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid() NOT NULL;
+ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS code text NOT NULL;
+ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS name text NOT NULL;
+ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS description text;
+ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS prereq_id uuid;
+ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true NOT NULL;
+ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now() NOT NULL;
 
 
 --
@@ -1113,8 +1141,16 @@ CREATE TABLE IF NOT EXISTS public.daily_assignments (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     visitor_id uuid,
     CONSTRAINT daily_assignments_status_check CHECK ((status = ANY (ARRAY['active'::text, 'superseded'::text]))),
-    CONSTRAINT one_identity CHECK ((((user_id IS NOT NULL) AND (visitor_id IS NULL)) OR ((user_id IS NULL) AND (visitor_id IS NOT NULL))))
-);
+    CONSTRAINT one_identity CHECK ((((user_id IS NOT NULL) AND (visitor_id IS NULL)) OR ((user_id IS NULL) AND (visitor_id IS NOT NULL)))));
+ALTER TABLE public.daily_assignments ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid() NOT NULL;
+ALTER TABLE public.daily_assignments ADD COLUMN IF NOT EXISTS user_id uuid;
+ALTER TABLE public.daily_assignments ADD COLUMN IF NOT EXISTS verse_id uuid NOT NULL;
+ALTER TABLE public.daily_assignments ADD COLUMN IF NOT EXISTS reminder_id uuid;
+ALTER TABLE public.daily_assignments ADD COLUMN IF NOT EXISTS assigned_on date NOT NULL;
+ALTER TABLE public.daily_assignments ADD COLUMN IF NOT EXISTS theme text NOT NULL;
+ALTER TABLE public.daily_assignments ADD COLUMN IF NOT EXISTS status text DEFAULT 'active'::text NOT NULL;
+ALTER TABLE public.daily_assignments ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now() NOT NULL;
+ALTER TABLE public.daily_assignments ADD COLUMN IF NOT EXISTS visitor_id uuid;
 
 
 --
@@ -1135,8 +1171,16 @@ CREATE TABLE IF NOT EXISTS public.daily_content (
     CONSTRAINT no_em_dash CHECK (((reminder !~ '[—–]'::text) AND (verse_text !~ '[—–]'::text))),
     CONSTRAINT no_emoji CHECK ((reminder ~ '^[\x00-\x7F''’"“”]*$'::text)),
     CONSTRAINT reference_shape CHECK ((verse_ref ~ '^[1-3]? ?[A-Z][A-Za-z ]+ [0-9]{1,3}:[0-9]{1,3}(-[0-9]{1,3})?$'::text)),
-    CONSTRAINT reminder_length CHECK (((array_length(regexp_split_to_array(TRIM(BOTH FROM reminder), '\s+'::text), 1) >= 50) AND (array_length(regexp_split_to_array(TRIM(BOTH FROM reminder), '\s+'::text), 1) <= 90)))
-);
+    CONSTRAINT reminder_length CHECK (((array_length(regexp_split_to_array(TRIM(BOTH FROM reminder), '\s+'::text), 1) >= 50) AND (array_length(regexp_split_to_array(TRIM(BOTH FROM reminder), '\s+'::text), 1) <= 90))));
+ALTER TABLE public.daily_content ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid() NOT NULL;
+ALTER TABLE public.daily_content ADD COLUMN IF NOT EXISTS verse_ref text NOT NULL;
+ALTER TABLE public.daily_content ADD COLUMN IF NOT EXISTS verse_text text NOT NULL;
+ALTER TABLE public.daily_content ADD COLUMN IF NOT EXISTS reminder text NOT NULL;
+ALTER TABLE public.daily_content ADD COLUMN IF NOT EXISTS theme text NOT NULL;
+ALTER TABLE public.daily_content ADD COLUMN IF NOT EXISTS status text DEFAULT 'active'::text NOT NULL;
+ALTER TABLE public.daily_content ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now() NOT NULL;
+ALTER TABLE public.daily_content ADD COLUMN IF NOT EXISTS reminder_norm text GENERATED ALWAYS AS (TRIM(BOTH FROM regexp_replace(regexp_replace(lower(reminder), '[^a-z0-9 ]'::text, ' '::text, 'g'::text), '\s+'::text, ' '::text, 'g'::text))) STORED;
+ALTER TABLE public.daily_content ADD COLUMN IF NOT EXISTS verse_ref_norm text GENERATED ALWAYS AS (TRIM(BOTH FROM regexp_replace(regexp_replace(lower(verse_ref), '[^a-z0-9: ]'::text, ' '::text, 'g'::text), '\s+'::text, ' '::text, 'g'::text))) STORED;
 
 
 --
@@ -1165,8 +1209,21 @@ CREATE TABLE IF NOT EXISTS public.daily_reminders (
     CONSTRAINT reminder_no_em_dash CHECK ((reminder !~ '[—–]'::text)),
     CONSTRAINT reminder_no_emoji CHECK ((reminder ~ '^[\x00-\x7F''’"“”]*$'::text)),
     CONSTRAINT reminder_no_hashtag CHECK ((reminder !~ '#'::text)),
-    CONSTRAINT reminder_starts_capital CHECK ((reminder ~ '^[A-Z]'::text))
-);
+    CONSTRAINT reminder_starts_capital CHECK ((reminder ~ '^[A-Z]'::text)));
+ALTER TABLE public.daily_reminders ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid() NOT NULL;
+ALTER TABLE public.daily_reminders ADD COLUMN IF NOT EXISTS reminder text NOT NULL;
+ALTER TABLE public.daily_reminders ADD COLUMN IF NOT EXISTS theme text NOT NULL;
+ALTER TABLE public.daily_reminders ADD COLUMN IF NOT EXISTS status text DEFAULT 'active'::text NOT NULL;
+ALTER TABLE public.daily_reminders ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now() NOT NULL;
+ALTER TABLE public.daily_reminders ADD COLUMN IF NOT EXISTS reminder_norm text GENERATED ALWAYS AS (TRIM(BOTH FROM regexp_replace(regexp_replace(lower(reminder), '[^a-z0-9 ]'::text, ' '::text, 'g'::text), '\s+'::text, ' '::text, 'g'::text))) STORED;
+ALTER TABLE public.daily_reminders ADD COLUMN IF NOT EXISTS verse_id uuid;
+ALTER TABLE public.daily_reminders ADD COLUMN IF NOT EXISTS focus_tag text;
+ALTER TABLE public.daily_reminders ADD COLUMN IF NOT EXISTS template_id uuid;
+ALTER TABLE public.daily_reminders ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now() NOT NULL;
+ALTER TABLE public.daily_reminders ADD COLUMN IF NOT EXISTS source text DEFAULT 'library'::text NOT NULL;
+ALTER TABLE public.daily_reminders ADD COLUMN IF NOT EXISTS reviewed_by uuid;
+ALTER TABLE public.daily_reminders ADD COLUMN IF NOT EXISTS reviewed_at timestamp with time zone;
+ALTER TABLE public.daily_reminders ADD COLUMN IF NOT EXISTS model text;
 
 
 --
@@ -1197,8 +1254,20 @@ CREATE TABLE IF NOT EXISTS public.daily_verses (
     CONSTRAINT daily_verses_status_check CHECK ((status = ANY (ARRAY['active'::text, 'retired'::text]))),
     CONSTRAINT daily_verses_testament_check CHECK ((testament = ANY (ARRAY['OT'::text, 'NT'::text]))),
     CONSTRAINT verse_no_em_dash CHECK ((verse_text !~ '[—–]'::text)),
-    CONSTRAINT verse_reference_is_real CHECK (public.is_valid_bible_reference(reference))
-);
+    CONSTRAINT verse_reference_is_real CHECK (public.is_valid_bible_reference(reference)));
+ALTER TABLE public.daily_verses ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid() NOT NULL;
+ALTER TABLE public.daily_verses ADD COLUMN IF NOT EXISTS reference text NOT NULL;
+ALTER TABLE public.daily_verses ADD COLUMN IF NOT EXISTS verse_text text NOT NULL;
+ALTER TABLE public.daily_verses ADD COLUMN IF NOT EXISTS status text DEFAULT 'active'::text NOT NULL;
+ALTER TABLE public.daily_verses ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now() NOT NULL;
+ALTER TABLE public.daily_verses ADD COLUMN IF NOT EXISTS reference_norm text GENERATED ALWAYS AS (TRIM(BOTH FROM regexp_replace(regexp_replace(lower(reference), '[^a-z0-9: ]'::text, ' '::text, 'g'::text), '\s+'::text, ' '::text, 'g'::text))) STORED;
+ALTER TABLE public.daily_verses ADD COLUMN IF NOT EXISTS devotional boolean DEFAULT true NOT NULL;
+ALTER TABLE public.daily_verses ADD COLUMN IF NOT EXISTS book text;
+ALTER TABLE public.daily_verses ADD COLUMN IF NOT EXISTS book_order smallint;
+ALTER TABLE public.daily_verses ADD COLUMN IF NOT EXISTS chapter smallint;
+ALTER TABLE public.daily_verses ADD COLUMN IF NOT EXISTS verse smallint;
+ALTER TABLE public.daily_verses ADD COLUMN IF NOT EXISTS testament text;
+ALTER TABLE public.daily_verses ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now() NOT NULL;
 
 
 --
@@ -1213,8 +1282,8 @@ COMMENT ON COLUMN public.daily_verses.devotional IS 'Eligible for the daily draw
 --
 
 CREATE TABLE IF NOT EXISTS public.devotional_books (
-    name text NOT NULL
-);
+    name text NOT NULL);
+ALTER TABLE public.devotional_books ADD COLUMN IF NOT EXISTS name text NOT NULL;
 
 
 --
@@ -1230,8 +1299,16 @@ CREATE TABLE IF NOT EXISTS public.discussions (
     moderated_by uuid,
     moderated_at timestamp with time zone,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    mentions uuid[] DEFAULT '{}'::uuid[] NOT NULL
-);
+    mentions uuid[] DEFAULT '{}'::uuid[] NOT NULL);
+ALTER TABLE public.discussions ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid() NOT NULL;
+ALTER TABLE public.discussions ADD COLUMN IF NOT EXISTS author_id uuid NOT NULL;
+ALTER TABLE public.discussions ADD COLUMN IF NOT EXISTS title text NOT NULL;
+ALTER TABLE public.discussions ADD COLUMN IF NOT EXISTS body text NOT NULL;
+ALTER TABLE public.discussions ADD COLUMN IF NOT EXISTS status public.approval_status DEFAULT 'pending'::public.approval_status NOT NULL;
+ALTER TABLE public.discussions ADD COLUMN IF NOT EXISTS moderated_by uuid;
+ALTER TABLE public.discussions ADD COLUMN IF NOT EXISTS moderated_at timestamp with time zone;
+ALTER TABLE public.discussions ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now() NOT NULL;
+ALTER TABLE public.discussions ADD COLUMN IF NOT EXISTS mentions uuid[] DEFAULT '{}'::uuid[] NOT NULL;
 
 
 --
@@ -1246,8 +1323,15 @@ CREATE TABLE IF NOT EXISTS public.enrollments (
     enrolled_by uuid,
     enrolled_at timestamp with time zone DEFAULT now() NOT NULL,
     completed_at timestamp with time zone,
-    notes text
-);
+    notes text);
+ALTER TABLE public.enrollments ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid() NOT NULL;
+ALTER TABLE public.enrollments ADD COLUMN IF NOT EXISTS user_id uuid NOT NULL;
+ALTER TABLE public.enrollments ADD COLUMN IF NOT EXISTS course_id uuid NOT NULL;
+ALTER TABLE public.enrollments ADD COLUMN IF NOT EXISTS status public.enrollment_status DEFAULT 'enrolled'::public.enrollment_status NOT NULL;
+ALTER TABLE public.enrollments ADD COLUMN IF NOT EXISTS enrolled_by uuid;
+ALTER TABLE public.enrollments ADD COLUMN IF NOT EXISTS enrolled_at timestamp with time zone DEFAULT now() NOT NULL;
+ALTER TABLE public.enrollments ADD COLUMN IF NOT EXISTS completed_at timestamp with time zone;
+ALTER TABLE public.enrollments ADD COLUMN IF NOT EXISTS notes text;
 
 
 --
@@ -1258,8 +1342,11 @@ CREATE TABLE IF NOT EXISTS public.event_interests (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     event_id uuid NOT NULL,
     profile_id uuid NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
-);
+    created_at timestamp with time zone DEFAULT now() NOT NULL);
+ALTER TABLE public.event_interests ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid() NOT NULL;
+ALTER TABLE public.event_interests ADD COLUMN IF NOT EXISTS event_id uuid NOT NULL;
+ALTER TABLE public.event_interests ADD COLUMN IF NOT EXISTS profile_id uuid NOT NULL;
+ALTER TABLE public.event_interests ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now() NOT NULL;
 
 
 --
@@ -1275,8 +1362,16 @@ CREATE TABLE IF NOT EXISTS public.events (
     location text,
     cover_url text,
     created_by uuid,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
-);
+    created_at timestamp with time zone DEFAULT now() NOT NULL);
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid() NOT NULL;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS title text NOT NULL;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS description text;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS starts_at timestamp with time zone NOT NULL;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS ends_at timestamp with time zone;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS location text;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS cover_url text;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS created_by uuid;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now() NOT NULL;
 
 
 --
@@ -1289,8 +1384,13 @@ CREATE TABLE IF NOT EXISTS public.hero_slides (
     caption text,
     ord integer DEFAULT 1 NOT NULL,
     is_active boolean DEFAULT true NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
-);
+    created_at timestamp with time zone DEFAULT now() NOT NULL);
+ALTER TABLE public.hero_slides ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid() NOT NULL;
+ALTER TABLE public.hero_slides ADD COLUMN IF NOT EXISTS image_url text NOT NULL;
+ALTER TABLE public.hero_slides ADD COLUMN IF NOT EXISTS caption text;
+ALTER TABLE public.hero_slides ADD COLUMN IF NOT EXISTS ord integer DEFAULT 1 NOT NULL;
+ALTER TABLE public.hero_slides ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true NOT NULL;
+ALTER TABLE public.hero_slides ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now() NOT NULL;
 
 
 --
@@ -1303,8 +1403,13 @@ CREATE TABLE IF NOT EXISTS public.lesson_completions (
     lesson_id uuid NOT NULL,
     verified_by uuid,
     verified_at timestamp with time zone DEFAULT now() NOT NULL,
-    notes text
-);
+    notes text);
+ALTER TABLE public.lesson_completions ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid() NOT NULL;
+ALTER TABLE public.lesson_completions ADD COLUMN IF NOT EXISTS enrollment_id uuid NOT NULL;
+ALTER TABLE public.lesson_completions ADD COLUMN IF NOT EXISTS lesson_id uuid NOT NULL;
+ALTER TABLE public.lesson_completions ADD COLUMN IF NOT EXISTS verified_by uuid;
+ALTER TABLE public.lesson_completions ADD COLUMN IF NOT EXISTS verified_at timestamp with time zone DEFAULT now() NOT NULL;
+ALTER TABLE public.lesson_completions ADD COLUMN IF NOT EXISTS notes text;
 
 
 --
@@ -1316,8 +1421,12 @@ CREATE TABLE IF NOT EXISTS public.live_series (
     title text NOT NULL,
     description text,
     cover_url text,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
-);
+    created_at timestamp with time zone DEFAULT now() NOT NULL);
+ALTER TABLE public.live_series ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid() NOT NULL;
+ALTER TABLE public.live_series ADD COLUMN IF NOT EXISTS title text NOT NULL;
+ALTER TABLE public.live_series ADD COLUMN IF NOT EXISTS description text;
+ALTER TABLE public.live_series ADD COLUMN IF NOT EXISTS cover_url text;
+ALTER TABLE public.live_series ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now() NOT NULL;
 
 
 --
@@ -1331,8 +1440,14 @@ CREATE TABLE IF NOT EXISTS public.live_videos (
     occurred_on date NOT NULL,
     created_by uuid,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    series_id uuid
-);
+    series_id uuid);
+ALTER TABLE public.live_videos ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid() NOT NULL;
+ALTER TABLE public.live_videos ADD COLUMN IF NOT EXISTS title text NOT NULL;
+ALTER TABLE public.live_videos ADD COLUMN IF NOT EXISTS video_url text NOT NULL;
+ALTER TABLE public.live_videos ADD COLUMN IF NOT EXISTS occurred_on date NOT NULL;
+ALTER TABLE public.live_videos ADD COLUMN IF NOT EXISTS created_by uuid;
+ALTER TABLE public.live_videos ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now() NOT NULL;
+ALTER TABLE public.live_videos ADD COLUMN IF NOT EXISTS series_id uuid;
 
 
 --
@@ -1345,8 +1460,13 @@ CREATE TABLE IF NOT EXISTS public.messages (
     recipient_id uuid NOT NULL,
     body text NOT NULL,
     read_at timestamp with time zone,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
-);
+    created_at timestamp with time zone DEFAULT now() NOT NULL);
+ALTER TABLE public.messages ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid() NOT NULL;
+ALTER TABLE public.messages ADD COLUMN IF NOT EXISTS sender_id uuid NOT NULL;
+ALTER TABLE public.messages ADD COLUMN IF NOT EXISTS recipient_id uuid NOT NULL;
+ALTER TABLE public.messages ADD COLUMN IF NOT EXISTS body text NOT NULL;
+ALTER TABLE public.messages ADD COLUMN IF NOT EXISTS read_at timestamp with time zone;
+ALTER TABLE public.messages ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now() NOT NULL;
 
 
 --
@@ -1365,8 +1485,19 @@ CREATE TABLE IF NOT EXISTS public.ministries (
     leader_id uuid,
     sort integer DEFAULT 0 NOT NULL,
     is_active boolean DEFAULT true NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
-);
+    created_at timestamp with time zone DEFAULT now() NOT NULL);
+ALTER TABLE public.ministries ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid() NOT NULL;
+ALTER TABLE public.ministries ADD COLUMN IF NOT EXISTS slug text NOT NULL;
+ALTER TABLE public.ministries ADD COLUMN IF NOT EXISTS name text NOT NULL;
+ALTER TABLE public.ministries ADD COLUMN IF NOT EXISTS summary text NOT NULL;
+ALTER TABLE public.ministries ADD COLUMN IF NOT EXISTS calling text NOT NULL;
+ALTER TABLE public.ministries ADD COLUMN IF NOT EXISTS scripture text NOT NULL;
+ALTER TABLE public.ministries ADD COLUMN IF NOT EXISTS scripture_ref text NOT NULL;
+ALTER TABLE public.ministries ADD COLUMN IF NOT EXISTS duties text[] DEFAULT '{}'::text[] NOT NULL;
+ALTER TABLE public.ministries ADD COLUMN IF NOT EXISTS leader_id uuid;
+ALTER TABLE public.ministries ADD COLUMN IF NOT EXISTS sort integer DEFAULT 0 NOT NULL;
+ALTER TABLE public.ministries ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true NOT NULL;
+ALTER TABLE public.ministries ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now() NOT NULL;
 
 
 --
@@ -1382,8 +1513,16 @@ CREATE TABLE IF NOT EXISTS public.ministry_interests (
     status public.ministry_status DEFAULT 'interested'::public.ministry_status NOT NULL,
     decided_at timestamp with time zone,
     decided_by uuid,
-    role_in_team text
-);
+    role_in_team text);
+ALTER TABLE public.ministry_interests ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid() NOT NULL;
+ALTER TABLE public.ministry_interests ADD COLUMN IF NOT EXISTS ministry_id uuid NOT NULL;
+ALTER TABLE public.ministry_interests ADD COLUMN IF NOT EXISTS profile_id uuid NOT NULL;
+ALTER TABLE public.ministry_interests ADD COLUMN IF NOT EXISTS note text;
+ALTER TABLE public.ministry_interests ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now() NOT NULL;
+ALTER TABLE public.ministry_interests ADD COLUMN IF NOT EXISTS status public.ministry_status DEFAULT 'interested'::public.ministry_status NOT NULL;
+ALTER TABLE public.ministry_interests ADD COLUMN IF NOT EXISTS decided_at timestamp with time zone;
+ALTER TABLE public.ministry_interests ADD COLUMN IF NOT EXISTS decided_by uuid;
+ALTER TABLE public.ministry_interests ADD COLUMN IF NOT EXISTS role_in_team text;
 
 
 --
@@ -1412,8 +1551,15 @@ CREATE TABLE IF NOT EXISTS public.news_posts (
     video_url text,
     author_id uuid,
     published_at timestamp with time zone DEFAULT now() NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
-);
+    created_at timestamp with time zone DEFAULT now() NOT NULL);
+ALTER TABLE public.news_posts ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid() NOT NULL;
+ALTER TABLE public.news_posts ADD COLUMN IF NOT EXISTS title text NOT NULL;
+ALTER TABLE public.news_posts ADD COLUMN IF NOT EXISTS body text NOT NULL;
+ALTER TABLE public.news_posts ADD COLUMN IF NOT EXISTS media_urls text[] DEFAULT '{}'::text[] NOT NULL;
+ALTER TABLE public.news_posts ADD COLUMN IF NOT EXISTS video_url text;
+ALTER TABLE public.news_posts ADD COLUMN IF NOT EXISTS author_id uuid;
+ALTER TABLE public.news_posts ADD COLUMN IF NOT EXISTS published_at timestamp with time zone DEFAULT now() NOT NULL;
+ALTER TABLE public.news_posts ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now() NOT NULL;
 
 
 --
@@ -1424,8 +1570,10 @@ CREATE TABLE IF NOT EXISTS public.notification_mutes (
     muter_id uuid NOT NULL,
     muted_id uuid NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT no_self_mute CHECK ((muter_id <> muted_id))
-);
+    CONSTRAINT no_self_mute CHECK ((muter_id <> muted_id)));
+ALTER TABLE public.notification_mutes ADD COLUMN IF NOT EXISTS muter_id uuid NOT NULL;
+ALTER TABLE public.notification_mutes ADD COLUMN IF NOT EXISTS muted_id uuid NOT NULL;
+ALTER TABLE public.notification_mutes ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now() NOT NULL;
 
 
 --
@@ -1441,8 +1589,16 @@ CREATE TABLE IF NOT EXISTS public.notifications (
     entity_id uuid,
     metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
     read_at timestamp with time zone,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
-);
+    created_at timestamp with time zone DEFAULT now() NOT NULL);
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid() NOT NULL;
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS user_id uuid NOT NULL;
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS actor_id uuid;
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS kind public.notification_kind NOT NULL;
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS entity_type text;
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS entity_id uuid;
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS metadata jsonb DEFAULT '{}'::jsonb NOT NULL;
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS read_at timestamp with time zone;
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now() NOT NULL;
 
 
 --
@@ -1460,8 +1616,18 @@ CREATE TABLE IF NOT EXISTS public.posts (
     moderated_at timestamp with time zone,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     mentions uuid[] DEFAULT '{}'::uuid[] NOT NULL,
-    is_system boolean DEFAULT false NOT NULL
-);
+    is_system boolean DEFAULT false NOT NULL);
+ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid() NOT NULL;
+ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS author_id uuid NOT NULL;
+ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS title text;
+ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS body text NOT NULL;
+ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS media_url text;
+ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS status public.approval_status DEFAULT 'approved'::public.approval_status NOT NULL;
+ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS moderated_by uuid;
+ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS moderated_at timestamp with time zone;
+ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now() NOT NULL;
+ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS mentions uuid[] DEFAULT '{}'::uuid[] NOT NULL;
+ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS is_system boolean DEFAULT false NOT NULL;
 
 
 --
@@ -1487,8 +1653,24 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     title text,
     is_hidden boolean DEFAULT false NOT NULL,
     CONSTRAINT profiles_facebook_url_check CHECK (((facebook_url IS NULL) OR (facebook_url ~* '^https://([a-z0-9-]+\.)*facebook\.com/.+'::text))),
-    CONSTRAINT profiles_instagram_url_check CHECK (((instagram_url IS NULL) OR (instagram_url ~* '^https://([a-z0-9-]+\.)*instagram\.com/.+'::text)))
-);
+    CONSTRAINT profiles_instagram_url_check CHECK (((instagram_url IS NULL) OR (instagram_url ~* '^https://([a-z0-9-]+\.)*instagram\.com/.+'::text))));
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS id uuid NOT NULL;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS full_name text NOT NULL;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS email text NOT NULL;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS role public.user_role DEFAULT 'user'::public.user_role NOT NULL;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS account_status public.approval_status DEFAULT 'pending'::public.approval_status NOT NULL;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS avatar_url text;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS contact_number text;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS leader_id uuid;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now() NOT NULL;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_leader boolean DEFAULT false NOT NULL;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS must_change_password boolean DEFAULT false NOT NULL;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS facebook_url text;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS instagram_url text;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS terms_accepted_at timestamp with time zone;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS terms_accepted_version text;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS title text;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_hidden boolean DEFAULT false NOT NULL;
 
 
 --
@@ -1545,8 +1727,13 @@ CREATE TABLE IF NOT EXISTS public.reactions (
     emoji text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT reactions_emoji_check CHECK ((char_length(emoji) <= 8)),
-    CONSTRAINT reactions_entity_type_check CHECK ((entity_type = ANY (ARRAY['post'::text, 'discussion'::text, 'comment'::text])))
-);
+    CONSTRAINT reactions_entity_type_check CHECK ((entity_type = ANY (ARRAY['post'::text, 'discussion'::text, 'comment'::text]))));
+ALTER TABLE public.reactions ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid() NOT NULL;
+ALTER TABLE public.reactions ADD COLUMN IF NOT EXISTS entity_type text NOT NULL;
+ALTER TABLE public.reactions ADD COLUMN IF NOT EXISTS entity_id uuid NOT NULL;
+ALTER TABLE public.reactions ADD COLUMN IF NOT EXISTS user_id uuid NOT NULL;
+ALTER TABLE public.reactions ADD COLUMN IF NOT EXISTS emoji text NOT NULL;
+ALTER TABLE public.reactions ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now() NOT NULL;
 
 
 --
@@ -1570,8 +1757,16 @@ CREATE TABLE IF NOT EXISTS public.reminder_templates (
     CONSTRAINT template_no_em_dash CHECK ((((opening || body) || closing) !~ '[—–]'::text)),
     CONSTRAINT template_no_emoji CHECK ((((opening || body) || closing) ~ '^[\x00-\x7F''’"“”]*$'::text)),
     CONSTRAINT template_no_roles CHECK ((((((opening || ' '::text) || body) || ' '::text) || closing) !~* '\m(parent|parents|mother|father|mum|dad|student|students|employee|employees|husband|wife|spouse|teenager|child of yours|your kids|your children|your job|your boss)\M'::text)),
-    CONSTRAINT template_starts_capital CHECK (((text IS NULL) OR (text ~ '^[A-Z]'::text)))
-);
+    CONSTRAINT template_starts_capital CHECK (((text IS NULL) OR (text ~ '^[A-Z]'::text))));
+ALTER TABLE public.reminder_templates ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid() NOT NULL;
+ALTER TABLE public.reminder_templates ADD COLUMN IF NOT EXISTS opening text DEFAULT ''::text;
+ALTER TABLE public.reminder_templates ADD COLUMN IF NOT EXISTS body text DEFAULT ''::text;
+ALTER TABLE public.reminder_templates ADD COLUMN IF NOT EXISTS closing text DEFAULT ''::text;
+ALTER TABLE public.reminder_templates ADD COLUMN IF NOT EXISTS focus_tag text NOT NULL;
+ALTER TABLE public.reminder_templates ADD COLUMN IF NOT EXISTS tone text DEFAULT 'steady'::text NOT NULL;
+ALTER TABLE public.reminder_templates ADD COLUMN IF NOT EXISTS status text DEFAULT 'active'::text NOT NULL;
+ALTER TABLE public.reminder_templates ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now() NOT NULL;
+ALTER TABLE public.reminder_templates ADD COLUMN IF NOT EXISTS text text NOT NULL;
 
 
 --
@@ -1582,8 +1777,11 @@ CREATE TABLE IF NOT EXISTS public.site_content (
     slug text NOT NULL,
     body text DEFAULT ''::text NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_by uuid
-);
+    updated_by uuid);
+ALTER TABLE public.site_content ADD COLUMN IF NOT EXISTS slug text NOT NULL;
+ALTER TABLE public.site_content ADD COLUMN IF NOT EXISTS body text DEFAULT ''::text NOT NULL;
+ALTER TABLE public.site_content ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now() NOT NULL;
+ALTER TABLE public.site_content ADD COLUMN IF NOT EXISTS updated_by uuid;
 
 
 --
@@ -1600,8 +1798,10 @@ COMMENT ON TABLE public.site_content IS 'Editable copy blocks keyed by slug. Ren
 CREATE TABLE IF NOT EXISTS public.verse_topic_kinds (
     slug text NOT NULL,
     label text NOT NULL,
-    visitor_safe boolean DEFAULT false NOT NULL
-);
+    visitor_safe boolean DEFAULT false NOT NULL);
+ALTER TABLE public.verse_topic_kinds ADD COLUMN IF NOT EXISTS slug text NOT NULL;
+ALTER TABLE public.verse_topic_kinds ADD COLUMN IF NOT EXISTS label text NOT NULL;
+ALTER TABLE public.verse_topic_kinds ADD COLUMN IF NOT EXISTS visitor_safe boolean DEFAULT false NOT NULL;
 
 
 --
@@ -1610,8 +1810,9 @@ CREATE TABLE IF NOT EXISTS public.verse_topic_kinds (
 
 CREATE TABLE IF NOT EXISTS public.verse_topics (
     verse_id uuid NOT NULL,
-    topic text NOT NULL
-);
+    topic text NOT NULL);
+ALTER TABLE public.verse_topics ADD COLUMN IF NOT EXISTS verse_id uuid NOT NULL;
+ALTER TABLE public.verse_topics ADD COLUMN IF NOT EXISTS topic text NOT NULL;
 
 
 --
