@@ -52,7 +52,7 @@ function Byline({ item, size = 40 }) {
   const avatar = isSystem ? '/logo.png' : item.author?.avatar_url;
   return (
     <div className="flex items-center gap-3">
-      <Avatar url={avatar} name={name} size={size} />
+      <Avatar url={avatar} name={name} size={size} fit={isSystem ? 'contain' : 'cover'} />
       <div className="min-w-0">
         <p className="flex items-center gap-2 truncate text-sm font-medium">
           {name}

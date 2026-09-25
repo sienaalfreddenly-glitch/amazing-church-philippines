@@ -156,7 +156,7 @@ export default function NotificationBell() {
                         the person who pressed the button, so the avatar and
                         name shown beside the row are the church's. */}
                     {n.kind === 'promoted' ? (
-                      <Avatar url="/logo.png" name="Amazing Church Philippines" size={34} />
+                      <Avatar url="/logo.png" name="Amazing Church Philippines" size={34} fit="contain" />
                     ) : (
                       <Avatar url={n.actor?.avatar_url} name={n.actor?.full_name || ''} size={34} />
                     )}
