@@ -26,17 +26,11 @@ export default async function ManageUsers() {
 
   const supabase = createClient();
   const viewerIsSuper = profile.role === 'super_admin';
-  const usersQuery = supabase
-    .from('profiles')
-    .select('id, full_name, email, avatar_url, role, account_status, leader_id, is_leader, title, is_hidden, created_at')
-    .order('created_at', { ascending: false });
-  // The maintenance account is invisible to every admin except a super admin,
-  // so nobody but that account can move it around by accident and it does not
-  // pad the member count on the panel.
-  if (!viewerIsSuper) usersQuery.eq('is_hidden', false);
-
   const [{ data: users, error }, { data: allCompletions }] = await Promise.all([
-    usersQuery,
+    supabase
+      .from('profiles')
+      .select('id, full_name, email, avatar_url, role, account_status, leader_id, is_leader, title, created_at')
+      .order('created_at', { ascending: false }),
     supabase.from('lesson_completions')
       .select('verified_at, enrollment:enrollments(user_id), lesson:course_lessons(title, ord, course:courses(code))')
       .order('verified_at', { ascending: false }),
@@ -45,7 +39,10 @@ export default async function ManageUsers() {
   const { data: contacts } = await supabase.rpc('visible_contacts');
   const contactById = new Map((contacts || []).map(c => [c.id, c.contact_number]));
 
-  const list = users || [];
+  // Super admins are hidden from every other viewer. Nobody from Head Pastor
+  // down to Disciple should see the maintenance account on this list; only
+  // another super admin can act on it here.
+  const list = (users || []).filter(u => viewerIsSuper || u.role !== 'super_admin');
   const leaders = list.filter(u => u.is_leader);
   const latestByUser = new Map();
   (allCompletions || []).forEach(c => {
