@@ -31,9 +31,13 @@ function linkFor(n) {
   if (n.entity_type === 'course')     return `/courses/${n.entity_id}`;
   if (n.entity_type === 'lesson')     return `/courses`;
   if (n.entity_type === 'comment')    return `/feed`;
-  // Leaders act on this from the members admin screen, where they can assign
-  // themselves or someone else.
-  if (n.entity_type === 'profile')    return `/admin/users`;
+  if (n.entity_type === 'profile') {
+    // A promotion or a mention should open the story about that person in
+    // the feed, never an admin panel. The unassigned-member alert still
+    // goes to the admin members list because leaders act on it there.
+    if (n.kind === 'promoted' || n.kind === 'mention') return '/feed';
+    return '/admin/users';
+  }
   if (n.entity_type === 'ministry')   return `/ministries`;
   if (n.entity_type === 'news')       return `/news`;
   if (n.entity_type === 'event')      return `/events`;
