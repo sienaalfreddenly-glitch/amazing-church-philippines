@@ -7,7 +7,8 @@ import { IconPhoto } from './Icons';
 import MentionInput from './MentionInput';
 
 const CHURCH_ID = '11111111-1111-4111-8111-111111111111';
-const STAFF_ROLES = new Set(['super_admin', 'admin', 'moderator']);
+const canSpeakAsChurch = (p) =>
+  p?.role === 'super_admin' || (['admin', 'moderator'].includes(p?.role) && p?.can_post_as_church);
 
 export default function PostComposer({ kind = 'post' }) {
   const supabase = useMemo(() => createClient(), []);
@@ -28,9 +29,9 @@ export default function PostComposer({ kind = 'post' }) {
   useEffect(() => { (async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { data } = await supabase.from('profiles').select('id, full_name, email, role, account_status, avatar_url, leader_id, created_at, is_leader, must_change_password, facebook_url, instagram_url, title, terms_accepted_at, terms_accepted_version').eq('id', user.id).single();
+    const { data } = await supabase.from('profiles').select('id, full_name, email, role, account_status, avatar_url, leader_id, created_at, is_leader, must_change_password, facebook_url, instagram_url, title, can_post_as_church, terms_accepted_at, terms_accepted_version').eq('id', user.id).single();
     setProfile(data);
-    if (data && STAFF_ROLES.has(data.role)) {
+    if (canSpeakAsChurch(data)) {
       // Pre-load the church profile so the composer can render its avatar
       // and name the moment the toggle flips on.
       const { data: c } = await supabase
@@ -135,7 +136,7 @@ export default function PostComposer({ kind = 'post' }) {
               className="text-ink/50 hover:text-ink text-xl leading-none">×</button>
           </div>
 
-          {STAFF_ROLES.has(profile.role) && church && (
+          {canSpeakAsChurch(profile) && church && (
             <label className="flex items-center gap-2 rounded-xl bg-brand-50/60 px-3 py-2 text-sm text-ink/75 ring-1 ring-brand-100">
               <input
                 type="checkbox"

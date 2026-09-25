@@ -6,11 +6,17 @@ import TimeAgo from './TimeAgo';
 import ReactionBar from './ReactionBar';
 import MentionInput, { RenderMentions } from './MentionInput';
 
+const CHURCH_ID = '11111111-1111-4111-8111-111111111111';
+const canSpeakAsChurch = (p) =>
+  p?.role === 'super_admin' || (['admin', 'moderator'].includes(p?.role) && p?.can_post_as_church);
+
 export default function CommentsSection({ entityType, entityId, initialLimit = 3 }) {
   const supabase = useMemo(() => createClient(), []);
   const [comments, setComments] = useState([]);
   const [me, setMe] = useState(null);
   const [meProfile, setMeProfile] = useState(null);
+  const [church, setChurch] = useState(null);
+  const [asChurch, setAsChurch] = useState(false);
   const [body, setBody] = useState('');
   const [mentions, setMentions] = useState([]);
   const [err, setErr] = useState('');
@@ -22,8 +28,13 @@ export default function CommentsSection({ entityType, entityId, initialLimit = 3
     setMe(user?.id || null);
     if (user) {
       const { data: p } = await supabase.from('profiles')
-        .select('full_name, avatar_url, account_status, role').eq('id', user.id).single();
+        .select('full_name, avatar_url, account_status, role, can_post_as_church').eq('id', user.id).single();
       setMeProfile(p);
+      if (canSpeakAsChurch(p)) {
+        const { data: c } = await supabase.from('profiles')
+          .select('id, full_name, avatar_url').eq('id', CHURCH_ID).maybeSingle();
+        if (c) setChurch(c);
+      }
     }
     await load();
   })(); }, [entityType, entityId]);
@@ -40,13 +51,20 @@ export default function CommentsSection({ entityType, entityId, initialLimit = 3
     e.preventDefault();
     if (!body.trim()) return;
     setErr(''); setBusy(true);
-    const { error } = await supabase.from('comments').insert({
-      entity_type: entityType, entity_id: entityId,
-      author_id: me, body: body.trim(), mentions,
-    });
+    let error;
+    if (asChurch && church) {
+      ({ error } = await supabase.rpc('comment_as_church', {
+        p_entity_type: entityType, p_entity_id: entityId, p_body: body.trim(),
+      }));
+    } else {
+      ({ error } = await supabase.from('comments').insert({
+        entity_type: entityType, entity_id: entityId,
+        author_id: me, body: body.trim(), mentions,
+      }));
+    }
     setBusy(false);
     if (error) return setErr(error.message);
-    setBody(''); setMentions([]); load();
+    setBody(''); setMentions([]); setAsChurch(false); load();
   }
 
   async function del(id) {
@@ -99,16 +117,29 @@ export default function CommentsSection({ entityType, entityId, initialLimit = 3
       </ul>
 
       {canPost ? (
-        <form onSubmit={submit} className="flex gap-2 items-start">
-          <div className="flex-1">
-            <MentionInput value={body} onChange={setBody}
-              mentions={mentions} onMentionsChange={setMentions}
-              placeholder="Write a comment… (type @ to mention)"
-              className="input min-h-[60px]" minRows={2} />
+        <form onSubmit={submit} className="space-y-2">
+          <div className="flex gap-2 items-start">
+            <div className="flex-1">
+              <MentionInput value={body} onChange={setBody}
+                mentions={mentions} onMentionsChange={setMentions}
+                placeholder={asChurch ? 'Comment as Amazing Church Philippines…' : 'Write a comment… (type @ to mention)'}
+                className="input min-h-[60px]" minRows={2} />
+            </div>
+            <button disabled={busy} className="btn-primary self-start">
+              {busy ? 'Posting…' : 'Post'}
+            </button>
           </div>
-          <button disabled={busy} className="btn-primary self-start">
-            {busy ? 'Posting…' : 'Post'}
-          </button>
+          {canSpeakAsChurch(meProfile) && church && (
+            <label className="flex items-center gap-2 text-xs text-ink/65">
+              <input
+                type="checkbox"
+                className="h-3.5 w-3.5 accent-brand"
+                checked={asChurch}
+                onChange={(e) => setAsChurch(e.target.checked)}
+              />
+              Comment as <strong className="font-semibold">{church.full_name}</strong>
+            </label>
+          )}
         </form>
       ) : (
         <p className="text-sm text-ink/60">

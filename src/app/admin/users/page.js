@@ -29,7 +29,7 @@ export default async function ManageUsers() {
   const [{ data: users, error }, { data: allCompletions }] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id, full_name, email, avatar_url, role, account_status, leader_id, is_leader, title, created_at')
+      .select('id, full_name, email, avatar_url, role, account_status, leader_id, is_leader, title, can_post_as_church, created_at')
       .order('created_at', { ascending: false }),
     supabase.from('lesson_completions')
       .select('verified_at, enrollment:enrollments(user_id), lesson:course_lessons(title, ord, course:courses(code))')
@@ -185,6 +185,25 @@ export default async function ManageUsers() {
                   )}
                 </AutoForm>
               </div>
+
+              {/* Speak-as-church grant. Super admin only, and only for
+                  admins and moderators — regular members would have no
+                  admin panel to reach the toggle from anyway. */}
+              {viewerIsSuper && (u.role === 'admin' || u.role === 'moderator') && (
+                <AutoForm action="/api/admin/church-access" className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-silver-light/50 px-4 py-2">
+                  <input type="hidden" name="id" value={u.id} />
+                  <p className="text-sm text-ink/70">May post & comment as the church</p>
+                  <select
+                    name="can"
+                    defaultValue={u.can_post_as_church ? 'true' : 'false'}
+                    className="input py-1 max-w-[7rem]"
+                    aria-label={`Church posting access for ${u.full_name}`}
+                  >
+                    <option value="false">Off</option>
+                    <option value="true">On</option>
+                  </select>
+                </AutoForm>
+              )}
 
               {/* Promotion.
                   Silent on rows the viewer cannot promote (either because the
