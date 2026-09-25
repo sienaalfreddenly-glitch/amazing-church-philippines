@@ -37,7 +37,12 @@ export async function middleware(request) {
   // HttpOnly and server-generated: a browser can neither read it nor choose it.
   if (!user && !request.cookies.get('acp_visitor')) {
     // crypto is a global in the Edge runtime the middleware runs on; node:crypto is not available there.
-    response.cookies.set('acp_visitor', crypto.randomUUID(), {
+    const visitorId = crypto.randomUUID();
+    // Mirror the cookie onto the request too, so a server component rendered on
+    // this same request (the Daily Verse, etc.) sees the id via cookies() and
+    // does not have to wait for the next page load to draw a verse.
+    request.cookies.set('acp_visitor', visitorId);
+    response.cookies.set('acp_visitor', visitorId, {
       httpOnly: true,
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
