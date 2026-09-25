@@ -160,6 +160,13 @@ grant execute on function public.visitor_daily_content(uuid) to anon, authentica
 --    Head Pastor, Pastor and other roles beside the name.
 -- ---------------------------------------------------------------------------
 
+-- profiles.title is added by 20260911_contact_privacy_consent_titles.sql. If
+-- that earlier migration has not landed on this environment, adding the
+-- column here keeps this file self-sufficient and safe to run in isolation.
+alter table public.profiles add column if not exists title text;
+comment on column public.profiles.title is
+  'What this person is called in the church, e.g. Head Pastor. Shown on the org chart.';
+
 drop function if exists public.list_leaders();
 create or replace function public.list_leaders()
 returns table (id uuid, full_name text, title text)
