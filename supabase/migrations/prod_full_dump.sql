@@ -21,12 +21,7 @@ SET row_security = off;
 --
 
 CREATE SCHEMA IF NOT EXISTS public;
-
--- pg_dump sets an empty search_path for safety; restore it so CREATE
--- EXTENSION lands in the public schema.
 SET search_path = public, pg_catalog;
-
--- Extensions referenced by later objects. Idempotent.
 CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
 
@@ -42,39 +37,46 @@ COMMENT ON SCHEMA public IS 'standard public schema';
 -- Name: approval_status; Type: TYPE; Schema: public; Owner: -
 --
 
+DO $$ BEGIN
 CREATE TYPE public.approval_status AS ENUM (
     'pending',
     'approved',
     'rejected'
 );
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 
 --
 -- Name: enrollment_status; Type: TYPE; Schema: public; Owner: -
 --
 
+DO $$ BEGIN
 CREATE TYPE public.enrollment_status AS ENUM (
     'enrolled',
     'completed',
     'dropped'
 );
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 
 --
 -- Name: ministry_status; Type: TYPE; Schema: public; Owner: -
 --
 
+DO $$ BEGIN
 CREATE TYPE public.ministry_status AS ENUM (
     'interested',
     'member',
     'declined'
 );
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 
 --
 -- Name: notification_kind; Type: TYPE; Schema: public; Owner: -
 --
 
+DO $$ BEGIN
 CREATE TYPE public.notification_kind AS ENUM (
     'enrolled',
     'lesson_verified',
@@ -90,25 +92,28 @@ CREATE TYPE public.notification_kind AS ENUM (
     'event_interest',
     'promoted'
 );
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 
 --
 -- Name: user_role; Type: TYPE; Schema: public; Owner: -
 --
 
+DO $$ BEGIN
 CREATE TYPE public.user_role AS ENUM (
     'super_admin',
     'admin',
     'moderator',
     'user'
 );
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 
 --
 -- Name: broadcast_to_members(uuid, public.notification_kind, text, uuid, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.broadcast_to_members(p_author uuid, p_kind public.notification_kind, p_entity_type text, p_entity_id uuid, p_metadata jsonb) RETURNS void
+CREATE OR REPLACE FUNCTION public.broadcast_to_members(p_author uuid, p_kind public.notification_kind, p_entity_type text, p_entity_id uuid, p_metadata jsonb) RETURNS void
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -129,7 +134,7 @@ $$;
 -- Name: can_manage_ministry(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.can_manage_ministry(m_id uuid) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.can_manage_ministry(m_id uuid) RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -143,7 +148,7 @@ $$;
 -- Name: current_role(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public."current_role"() RETURNS public.user_role
+CREATE OR REPLACE FUNCTION public."current_role"() RETURNS public.user_role
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -155,7 +160,7 @@ $$;
 -- Name: ends_sentence(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.ends_sentence(t text) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.ends_sentence(t text) RETURNS boolean
     LANGUAGE sql IMMUTABLE
     AS $_$
   select trim(coalesce(t, '')) ~ '[.!?]["''’”]{0,2}$';
@@ -166,7 +171,7 @@ $_$;
 -- Name: generate_reminder_for(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.generate_reminder_for(p_verse uuid) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.generate_reminder_for(p_verse uuid) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -224,7 +229,7 @@ $$;
 -- Name: handle_new_user(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.handle_new_user() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.handle_new_user() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -292,7 +297,7 @@ $$;
 -- Name: is_admin(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.is_admin() RETURNS boolean
+CREATE OR REPLACE FUNCTION public.is_admin() RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -307,7 +312,7 @@ $$;
 -- Name: is_approved(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.is_approved() RETURNS boolean
+CREATE OR REPLACE FUNCTION public.is_approved() RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -321,7 +326,7 @@ $$;
 -- Name: is_staff(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.is_staff() RETURNS boolean
+CREATE OR REPLACE FUNCTION public.is_staff() RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -336,7 +341,7 @@ $$;
 -- Name: is_valid_bible_reference(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.is_valid_bible_reference(ref text) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.is_valid_bible_reference(ref text) RETURNS boolean
     LANGUAGE sql IMMUTABLE
     AS $_$
   select ref ~ ('^(' || array_to_string(array[
@@ -357,7 +362,7 @@ $_$;
 -- Name: ministry_team(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.ministry_team(m_id uuid) RETURNS TABLE(profile_id uuid, full_name text, avatar_url text, role_in_team text)
+CREATE OR REPLACE FUNCTION public.ministry_team(m_id uuid) RETURNS TABLE(profile_id uuid, full_name text, avatar_url text, role_in_team text)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -375,7 +380,7 @@ $$;
 -- Name: ministry_teams(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.ministry_teams() RETURNS TABLE(ministry_id uuid, profile_id uuid, full_name text, avatar_url text, role_in_team text)
+CREATE OR REPLACE FUNCTION public.ministry_teams() RETURNS TABLE(ministry_id uuid, profile_id uuid, full_name text, avatar_url text, role_in_team text)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -393,7 +398,7 @@ $$;
 -- Name: notify_comment(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_comment() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_comment() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -424,7 +429,7 @@ end $$;
 -- Name: notify_enrollment(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_enrollment() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_enrollment() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -442,7 +447,7 @@ end $$;
 -- Name: notify_event_interest(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_event_interest() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_event_interest() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -473,7 +478,7 @@ $$;
 -- Name: notify_lesson_verified(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_lesson_verified() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_lesson_verified() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -496,7 +501,7 @@ end $$;
 -- Name: notify_ministry_interest(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_ministry_interest() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_ministry_interest() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -534,7 +539,7 @@ $$;
 -- Name: notify_new_discussion(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_new_discussion() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_new_discussion() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -552,7 +557,7 @@ end $$;
 -- Name: notify_new_event(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_new_event() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_new_event() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -569,7 +574,7 @@ end $$;
 -- Name: notify_new_news(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_new_news() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_new_news() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -586,7 +591,7 @@ end $$;
 -- Name: notify_new_post(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_new_post() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_new_post() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -606,7 +611,7 @@ end $$;
 -- Name: notify_post_approved(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_post_approved() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_post_approved() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -625,7 +630,7 @@ end $$;
 -- Name: notify_post_mentions(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_post_mentions() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_post_mentions() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -648,7 +653,7 @@ end $$;
 -- Name: notify_reaction(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_reaction() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_reaction() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -674,7 +679,7 @@ end $$;
 -- Name: org_chart(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.org_chart() RETURNS TABLE(id uuid, full_name text, title text, avatar_url text, leader_id uuid, is_leader boolean)
+CREATE OR REPLACE FUNCTION public.org_chart() RETURNS TABLE(id uuid, full_name text, title text, avatar_url text, leader_id uuid, is_leader boolean)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -689,7 +694,7 @@ $$;
 -- Name: passage_for(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.passage_for(p_verse uuid) RETURNS TABLE(reference text, passage_text text, first_verse smallint, last_verse smallint)
+CREATE OR REPLACE FUNCTION public.passage_for(p_verse uuid) RETURNS TABLE(reference text, passage_text text, first_verse smallint, last_verse smallint)
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -782,7 +787,7 @@ $$;
 -- Name: profile_contact(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.profile_contact(target uuid) RETURNS text
+CREATE OR REPLACE FUNCTION public.profile_contact(target uuid) RETURNS text
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -829,7 +834,7 @@ COMMENT ON FUNCTION public.profile_contact(target uuid) IS 'Returns a member pho
 -- Name: promote_member(uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.promote_member(p_target uuid, p_to text) RETURNS void
+CREATE OR REPLACE FUNCTION public.promote_member(p_target uuid, p_to text) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -935,7 +940,7 @@ $$;
 -- Name: reject_similar_reminder(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.reject_similar_reminder() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.reject_similar_reminder() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -965,7 +970,7 @@ $$;
 -- Name: reminder_queue_stats(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.reminder_queue_stats() RETURNS TABLE(pending bigint, approved bigint, rejected bigint, verses_covered bigint)
+CREATE OR REPLACE FUNCTION public.reminder_queue_stats() RETURNS TABLE(pending bigint, approved bigint, rejected bigint, verses_covered bigint)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -982,7 +987,7 @@ $$;
 -- Name: verses_needing_reminders(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.verses_needing_reminders(p_limit integer DEFAULT 20) RETURNS TABLE(id uuid, reference text, verse_text text, approved bigint)
+CREATE OR REPLACE FUNCTION public.verses_needing_reminders(p_limit integer DEFAULT 20) RETURNS TABLE(id uuid, reference text, verse_text text, approved bigint)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -1001,7 +1006,7 @@ $$;
 -- Name: visible_contacts(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.visible_contacts() RETURNS TABLE(id uuid, contact_number text)
+CREATE OR REPLACE FUNCTION public.visible_contacts() RETURNS TABLE(id uuid, contact_number text)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -1031,7 +1036,7 @@ SET default_table_access_method = heap;
 -- Name: bible_books; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.bible_books (
+CREATE TABLE IF NOT EXISTS public.bible_books (
     name text NOT NULL,
     book_order smallint NOT NULL,
     testament text NOT NULL,
@@ -1044,7 +1049,7 @@ CREATE TABLE public.bible_books (
 -- Name: comments; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.comments (
+CREATE TABLE IF NOT EXISTS public.comments (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     entity_type text NOT NULL,
     entity_id uuid NOT NULL,
@@ -1060,7 +1065,7 @@ CREATE TABLE public.comments (
 -- Name: course_lessons; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.course_lessons (
+CREATE TABLE IF NOT EXISTS public.course_lessons (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     course_id uuid NOT NULL,
     ord integer DEFAULT 1 NOT NULL,
@@ -1082,7 +1087,7 @@ CREATE TABLE public.course_lessons (
 -- Name: courses; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.courses (
+CREATE TABLE IF NOT EXISTS public.courses (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     code text NOT NULL,
     name text NOT NULL,
@@ -1097,7 +1102,7 @@ CREATE TABLE public.courses (
 -- Name: daily_assignments; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.daily_assignments (
+CREATE TABLE IF NOT EXISTS public.daily_assignments (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     user_id uuid,
     verse_id uuid NOT NULL,
@@ -1116,7 +1121,7 @@ CREATE TABLE public.daily_assignments (
 -- Name: daily_content; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.daily_content (
+CREATE TABLE IF NOT EXISTS public.daily_content (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     verse_ref text NOT NULL,
     verse_text text NOT NULL,
@@ -1138,7 +1143,7 @@ CREATE TABLE public.daily_content (
 -- Name: daily_reminders; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.daily_reminders (
+CREATE TABLE IF NOT EXISTS public.daily_reminders (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     reminder text NOT NULL,
     theme text NOT NULL,
@@ -1175,7 +1180,7 @@ COMMENT ON COLUMN public.daily_reminders.source IS 'library: written by a person
 -- Name: daily_verses; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.daily_verses (
+CREATE TABLE IF NOT EXISTS public.daily_verses (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     reference text NOT NULL,
     verse_text text NOT NULL,
@@ -1207,7 +1212,7 @@ COMMENT ON COLUMN public.daily_verses.devotional IS 'Eligible for the daily draw
 -- Name: devotional_books; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.devotional_books (
+CREATE TABLE IF NOT EXISTS public.devotional_books (
     name text NOT NULL
 );
 
@@ -1216,7 +1221,7 @@ CREATE TABLE public.devotional_books (
 -- Name: discussions; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.discussions (
+CREATE TABLE IF NOT EXISTS public.discussions (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     author_id uuid NOT NULL,
     title text NOT NULL,
@@ -1233,7 +1238,7 @@ CREATE TABLE public.discussions (
 -- Name: enrollments; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.enrollments (
+CREATE TABLE IF NOT EXISTS public.enrollments (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     user_id uuid NOT NULL,
     course_id uuid NOT NULL,
@@ -1249,7 +1254,7 @@ CREATE TABLE public.enrollments (
 -- Name: event_interests; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.event_interests (
+CREATE TABLE IF NOT EXISTS public.event_interests (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     event_id uuid NOT NULL,
     profile_id uuid NOT NULL,
@@ -1261,7 +1266,7 @@ CREATE TABLE public.event_interests (
 -- Name: events; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.events (
+CREATE TABLE IF NOT EXISTS public.events (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     title text NOT NULL,
     description text,
@@ -1278,7 +1283,7 @@ CREATE TABLE public.events (
 -- Name: hero_slides; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.hero_slides (
+CREATE TABLE IF NOT EXISTS public.hero_slides (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     image_url text NOT NULL,
     caption text,
@@ -1292,7 +1297,7 @@ CREATE TABLE public.hero_slides (
 -- Name: lesson_completions; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.lesson_completions (
+CREATE TABLE IF NOT EXISTS public.lesson_completions (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     enrollment_id uuid NOT NULL,
     lesson_id uuid NOT NULL,
@@ -1306,7 +1311,7 @@ CREATE TABLE public.lesson_completions (
 -- Name: live_series; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.live_series (
+CREATE TABLE IF NOT EXISTS public.live_series (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     title text NOT NULL,
     description text,
@@ -1319,7 +1324,7 @@ CREATE TABLE public.live_series (
 -- Name: live_videos; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.live_videos (
+CREATE TABLE IF NOT EXISTS public.live_videos (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     title text NOT NULL,
     video_url text NOT NULL,
@@ -1334,7 +1339,7 @@ CREATE TABLE public.live_videos (
 -- Name: messages; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.messages (
+CREATE TABLE IF NOT EXISTS public.messages (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     sender_id uuid NOT NULL,
     recipient_id uuid NOT NULL,
@@ -1348,7 +1353,7 @@ CREATE TABLE public.messages (
 -- Name: ministries; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.ministries (
+CREATE TABLE IF NOT EXISTS public.ministries (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     slug text NOT NULL,
     name text NOT NULL,
@@ -1368,7 +1373,7 @@ CREATE TABLE public.ministries (
 -- Name: ministry_interests; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.ministry_interests (
+CREATE TABLE IF NOT EXISTS public.ministry_interests (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     ministry_id uuid NOT NULL,
     profile_id uuid NOT NULL,
@@ -1399,7 +1404,7 @@ COMMENT ON COLUMN public.ministry_interests.role_in_team IS 'Optional, e.g. "Sou
 -- Name: news_posts; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.news_posts (
+CREATE TABLE IF NOT EXISTS public.news_posts (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     title text NOT NULL,
     body text NOT NULL,
@@ -1415,7 +1420,7 @@ CREATE TABLE public.news_posts (
 -- Name: notification_mutes; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.notification_mutes (
+CREATE TABLE IF NOT EXISTS public.notification_mutes (
     muter_id uuid NOT NULL,
     muted_id uuid NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -1427,7 +1432,7 @@ CREATE TABLE public.notification_mutes (
 -- Name: notifications; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.notifications (
+CREATE TABLE IF NOT EXISTS public.notifications (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     user_id uuid NOT NULL,
     actor_id uuid,
@@ -1444,7 +1449,7 @@ CREATE TABLE public.notifications (
 -- Name: posts; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.posts (
+CREATE TABLE IF NOT EXISTS public.posts (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     author_id uuid NOT NULL,
     title text,
@@ -1463,7 +1468,7 @@ CREATE TABLE public.posts (
 -- Name: profiles; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.profiles (
+CREATE TABLE IF NOT EXISTS public.profiles (
     id uuid NOT NULL,
     full_name text NOT NULL,
     email text NOT NULL,
@@ -1532,7 +1537,7 @@ COMMENT ON COLUMN public.profiles.is_hidden IS 'Service account. Hidden from dir
 -- Name: reactions; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.reactions (
+CREATE TABLE IF NOT EXISTS public.reactions (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     entity_type text NOT NULL,
     entity_id uuid NOT NULL,
@@ -1548,7 +1553,7 @@ CREATE TABLE public.reactions (
 -- Name: reminder_templates; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.reminder_templates (
+CREATE TABLE IF NOT EXISTS public.reminder_templates (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     opening text DEFAULT ''::text,
     body text DEFAULT ''::text,
@@ -1573,7 +1578,7 @@ CREATE TABLE public.reminder_templates (
 -- Name: site_content; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.site_content (
+CREATE TABLE IF NOT EXISTS public.site_content (
     slug text NOT NULL,
     body text DEFAULT ''::text NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -1592,7 +1597,7 @@ COMMENT ON TABLE public.site_content IS 'Editable copy blocks keyed by slug. Ren
 -- Name: verse_topic_kinds; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.verse_topic_kinds (
+CREATE TABLE IF NOT EXISTS public.verse_topic_kinds (
     slug text NOT NULL,
     label text NOT NULL,
     visitor_safe boolean DEFAULT false NOT NULL
@@ -1603,7 +1608,7 @@ CREATE TABLE public.verse_topic_kinds (
 -- Name: verse_topics; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.verse_topics (
+CREATE TABLE IF NOT EXISTS public.verse_topics (
     verse_id uuid NOT NULL,
     topic text NOT NULL
 );
@@ -1613,592 +1618,673 @@ CREATE TABLE public.verse_topics (
 -- Name: bible_books bible_books_book_order_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.bible_books
     ADD CONSTRAINT bible_books_book_order_key UNIQUE (book_order);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: bible_books bible_books_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.bible_books
     ADD CONSTRAINT bible_books_pkey PRIMARY KEY (name);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: comments comments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.comments
     ADD CONSTRAINT comments_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: course_lessons course_lessons_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.course_lessons
     ADD CONSTRAINT course_lessons_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: courses courses_code_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.courses
     ADD CONSTRAINT courses_code_key UNIQUE (code);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: courses courses_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.courses
     ADD CONSTRAINT courses_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: daily_assignments daily_assignments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.daily_assignments
     ADD CONSTRAINT daily_assignments_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: daily_content daily_content_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.daily_content
     ADD CONSTRAINT daily_content_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: daily_reminders daily_reminders_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.daily_reminders
     ADD CONSTRAINT daily_reminders_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: daily_verses daily_verses_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.daily_verses
     ADD CONSTRAINT daily_verses_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: devotional_books devotional_books_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.devotional_books
     ADD CONSTRAINT devotional_books_pkey PRIMARY KEY (name);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: discussions discussions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.discussions
     ADD CONSTRAINT discussions_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: enrollments enrollments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.enrollments
     ADD CONSTRAINT enrollments_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: enrollments enrollments_user_id_course_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.enrollments
     ADD CONSTRAINT enrollments_user_id_course_id_key UNIQUE (user_id, course_id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: event_interests event_interests_event_id_profile_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.event_interests
     ADD CONSTRAINT event_interests_event_id_profile_id_key UNIQUE (event_id, profile_id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: event_interests event_interests_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.event_interests
     ADD CONSTRAINT event_interests_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: events events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.events
     ADD CONSTRAINT events_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: hero_slides hero_slides_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.hero_slides
     ADD CONSTRAINT hero_slides_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: lesson_completions lesson_completions_enrollment_id_lesson_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.lesson_completions
     ADD CONSTRAINT lesson_completions_enrollment_id_lesson_id_key UNIQUE (enrollment_id, lesson_id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: lesson_completions lesson_completions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.lesson_completions
     ADD CONSTRAINT lesson_completions_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: live_series live_series_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.live_series
     ADD CONSTRAINT live_series_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: live_series live_series_title_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.live_series
     ADD CONSTRAINT live_series_title_key UNIQUE (title);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: live_videos live_videos_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.live_videos
     ADD CONSTRAINT live_videos_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: messages messages_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.messages
     ADD CONSTRAINT messages_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: ministries ministries_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.ministries
     ADD CONSTRAINT ministries_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: ministries ministries_slug_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.ministries
     ADD CONSTRAINT ministries_slug_key UNIQUE (slug);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: ministry_interests ministry_interests_ministry_id_profile_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.ministry_interests
     ADD CONSTRAINT ministry_interests_ministry_id_profile_id_key UNIQUE (ministry_id, profile_id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: ministry_interests ministry_interests_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.ministry_interests
     ADD CONSTRAINT ministry_interests_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: news_posts news_posts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.news_posts
     ADD CONSTRAINT news_posts_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: notification_mutes notification_mutes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.notification_mutes
     ADD CONSTRAINT notification_mutes_pkey PRIMARY KEY (muter_id, muted_id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: notifications notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.notifications
     ADD CONSTRAINT notifications_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: posts posts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.posts
     ADD CONSTRAINT posts_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: profiles profiles_email_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.profiles
     ADD CONSTRAINT profiles_email_key UNIQUE (email);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: profiles profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.profiles
     ADD CONSTRAINT profiles_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: reactions reactions_entity_type_entity_id_user_id_emoji_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.reactions
     ADD CONSTRAINT reactions_entity_type_entity_id_user_id_emoji_key UNIQUE (entity_type, entity_id, user_id, emoji);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: reactions reactions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.reactions
     ADD CONSTRAINT reactions_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: reminder_templates reminder_templates_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.reminder_templates
     ADD CONSTRAINT reminder_templates_pkey PRIMARY KEY (id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: site_content site_content_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.site_content
     ADD CONSTRAINT site_content_pkey PRIMARY KEY (slug);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: verse_topic_kinds verse_topic_kinds_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.verse_topic_kinds
     ADD CONSTRAINT verse_topic_kinds_pkey PRIMARY KEY (slug);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: verse_topics verse_topics_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.verse_topics
     ADD CONSTRAINT verse_topics_pkey PRIMARY KEY (verse_id, topic);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: assignments_reminder_uniq; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX assignments_reminder_uniq ON public.daily_assignments USING btree (reminder_id);
+CREATE UNIQUE INDEX IF NOT EXISTS assignments_reminder_uniq ON public.daily_assignments USING btree (reminder_id);
 
 
 --
 -- Name: assignments_user_day_uniq; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX assignments_user_day_uniq ON public.daily_assignments USING btree (user_id, assigned_on) WHERE (user_id IS NOT NULL);
+CREATE UNIQUE INDEX IF NOT EXISTS assignments_user_day_uniq ON public.daily_assignments USING btree (user_id, assigned_on) WHERE (user_id IS NOT NULL);
 
 
 --
 -- Name: assignments_visitor_day_uniq; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX assignments_visitor_day_uniq ON public.daily_assignments USING btree (visitor_id, assigned_on) WHERE (visitor_id IS NOT NULL);
+CREATE UNIQUE INDEX IF NOT EXISTS assignments_visitor_day_uniq ON public.daily_assignments USING btree (visitor_id, assigned_on) WHERE (visitor_id IS NOT NULL);
 
 
 --
 -- Name: comments_entity_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX comments_entity_idx ON public.comments USING btree (entity_type, entity_id, created_at);
+CREATE INDEX IF NOT EXISTS comments_entity_idx ON public.comments USING btree (entity_type, entity_id, created_at);
 
 
 --
 -- Name: course_lessons_course_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX course_lessons_course_idx ON public.course_lessons USING btree (course_id, ord);
+CREATE INDEX IF NOT EXISTS course_lessons_course_idx ON public.course_lessons USING btree (course_id, ord);
 
 
 --
 -- Name: daily_assignments_user_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX daily_assignments_user_idx ON public.daily_assignments USING btree (user_id, assigned_on DESC);
+CREATE INDEX IF NOT EXISTS daily_assignments_user_idx ON public.daily_assignments USING btree (user_id, assigned_on DESC);
 
 
 --
 -- Name: daily_assignments_verse_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX daily_assignments_verse_idx ON public.daily_assignments USING btree (verse_id, assigned_on DESC);
+CREATE INDEX IF NOT EXISTS daily_assignments_verse_idx ON public.daily_assignments USING btree (verse_id, assigned_on DESC);
 
 
 --
 -- Name: daily_content_reminder_trgm; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX daily_content_reminder_trgm ON public.daily_content USING gin (reminder_norm public.gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS daily_content_reminder_trgm ON public.daily_content USING gin (reminder_norm public.gin_trgm_ops);
 
 
 --
 -- Name: daily_content_reminder_uniq; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX daily_content_reminder_uniq ON public.daily_content USING btree (reminder_norm);
+CREATE UNIQUE INDEX IF NOT EXISTS daily_content_reminder_uniq ON public.daily_content USING btree (reminder_norm);
 
 
 --
 -- Name: daily_content_verse_ref_uniq; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX daily_content_verse_ref_uniq ON public.daily_content USING btree (verse_ref_norm);
+CREATE UNIQUE INDEX IF NOT EXISTS daily_content_verse_ref_uniq ON public.daily_content USING btree (verse_ref_norm);
 
 
 --
 -- Name: daily_reminders_pending_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX daily_reminders_pending_idx ON public.daily_reminders USING btree (created_at) WHERE (status = 'pending'::text);
+CREATE INDEX IF NOT EXISTS daily_reminders_pending_idx ON public.daily_reminders USING btree (created_at) WHERE (status = 'pending'::text);
 
 
 --
 -- Name: daily_reminders_trgm; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX daily_reminders_trgm ON public.daily_reminders USING gin (reminder_norm public.gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS daily_reminders_trgm ON public.daily_reminders USING gin (reminder_norm public.gin_trgm_ops);
 
 
 --
 -- Name: daily_reminders_verse_norm_uniq; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX daily_reminders_verse_norm_uniq ON public.daily_reminders USING btree (verse_id, reminder_norm);
+CREATE UNIQUE INDEX IF NOT EXISTS daily_reminders_verse_norm_uniq ON public.daily_reminders USING btree (verse_id, reminder_norm);
 
 
 --
 -- Name: daily_reminders_verse_unused_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX daily_reminders_verse_unused_idx ON public.daily_reminders USING btree (verse_id) WHERE (status = 'active'::text);
+CREATE INDEX IF NOT EXISTS daily_reminders_verse_unused_idx ON public.daily_reminders USING btree (verse_id) WHERE (status = 'active'::text);
 
 
 --
 -- Name: daily_verses_bcv_uniq; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX daily_verses_bcv_uniq ON public.daily_verses USING btree (book, chapter, verse) WHERE (book IS NOT NULL);
+CREATE UNIQUE INDEX IF NOT EXISTS daily_verses_bcv_uniq ON public.daily_verses USING btree (book, chapter, verse) WHERE (book IS NOT NULL);
 
 
 --
 -- Name: daily_verses_devotional_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX daily_verses_devotional_idx ON public.daily_verses USING btree (devotional) WHERE (status = 'active'::text);
+CREATE INDEX IF NOT EXISTS daily_verses_devotional_idx ON public.daily_verses USING btree (devotional) WHERE (status = 'active'::text);
 
 
 --
 -- Name: daily_verses_order_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX daily_verses_order_idx ON public.daily_verses USING btree (book_order, chapter, verse);
+CREATE INDEX IF NOT EXISTS daily_verses_order_idx ON public.daily_verses USING btree (book_order, chapter, verse);
 
 
 --
 -- Name: daily_verses_reference_uniq; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX daily_verses_reference_uniq ON public.daily_verses USING btree (reference_norm);
+CREATE UNIQUE INDEX IF NOT EXISTS daily_verses_reference_uniq ON public.daily_verses USING btree (reference_norm);
 
 
 --
 -- Name: discussions_status_created_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX discussions_status_created_idx ON public.discussions USING btree (status, created_at DESC);
+CREATE INDEX IF NOT EXISTS discussions_status_created_idx ON public.discussions USING btree (status, created_at DESC);
 
 
 --
 -- Name: enrollments_course_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX enrollments_course_idx ON public.enrollments USING btree (course_id);
+CREATE INDEX IF NOT EXISTS enrollments_course_idx ON public.enrollments USING btree (course_id);
 
 
 --
 -- Name: enrollments_user_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX enrollments_user_idx ON public.enrollments USING btree (user_id);
+CREATE INDEX IF NOT EXISTS enrollments_user_idx ON public.enrollments USING btree (user_id);
 
 
 --
 -- Name: event_interests_event_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX event_interests_event_idx ON public.event_interests USING btree (event_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS event_interests_event_idx ON public.event_interests USING btree (event_id, created_at DESC);
 
 
 --
 -- Name: hero_slides_ord_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX hero_slides_ord_idx ON public.hero_slides USING btree (ord);
+CREATE INDEX IF NOT EXISTS hero_slides_ord_idx ON public.hero_slides USING btree (ord);
 
 
 --
 -- Name: lesson_completions_enrollment_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX lesson_completions_enrollment_idx ON public.lesson_completions USING btree (enrollment_id);
+CREATE INDEX IF NOT EXISTS lesson_completions_enrollment_idx ON public.lesson_completions USING btree (enrollment_id);
 
 
 --
 -- Name: live_videos_occurred_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX live_videos_occurred_idx ON public.live_videos USING btree (occurred_on DESC);
+CREATE INDEX IF NOT EXISTS live_videos_occurred_idx ON public.live_videos USING btree (occurred_on DESC);
 
 
 --
 -- Name: live_videos_series_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX live_videos_series_idx ON public.live_videos USING btree (series_id);
+CREATE INDEX IF NOT EXISTS live_videos_series_idx ON public.live_videos USING btree (series_id);
 
 
 --
 -- Name: messages_recipient_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX messages_recipient_idx ON public.messages USING btree (recipient_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS messages_recipient_idx ON public.messages USING btree (recipient_id, created_at DESC);
 
 
 --
 -- Name: ministry_interests_ministry_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ministry_interests_ministry_idx ON public.ministry_interests USING btree (ministry_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS ministry_interests_ministry_idx ON public.ministry_interests USING btree (ministry_id, created_at DESC);
 
 
 --
 -- Name: ministry_interests_status_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ministry_interests_status_idx ON public.ministry_interests USING btree (ministry_id, status);
+CREATE INDEX IF NOT EXISTS ministry_interests_status_idx ON public.ministry_interests USING btree (ministry_id, status);
 
 
 --
 -- Name: news_posts_published_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX news_posts_published_idx ON public.news_posts USING btree (published_at DESC);
+CREATE INDEX IF NOT EXISTS news_posts_published_idx ON public.news_posts USING btree (published_at DESC);
 
 
 --
 -- Name: notifications_recipient_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX notifications_recipient_idx ON public.notifications USING btree (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS notifications_recipient_idx ON public.notifications USING btree (user_id, created_at DESC);
 
 
 --
 -- Name: notifications_unread_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX notifications_unread_idx ON public.notifications USING btree (user_id) WHERE (read_at IS NULL);
+CREATE INDEX IF NOT EXISTS notifications_unread_idx ON public.notifications USING btree (user_id) WHERE (read_at IS NULL);
 
 
 --
 -- Name: posts_status_created_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX posts_status_created_idx ON public.posts USING btree (status, created_at DESC);
+CREATE INDEX IF NOT EXISTS posts_status_created_idx ON public.posts USING btree (status, created_at DESC);
 
 
 --
 -- Name: profiles_is_leader_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX profiles_is_leader_idx ON public.profiles USING btree (is_leader);
+CREATE INDEX IF NOT EXISTS profiles_is_leader_idx ON public.profiles USING btree (is_leader);
 
 
 --
 -- Name: profiles_leader_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX profiles_leader_idx ON public.profiles USING btree (leader_id);
+CREATE INDEX IF NOT EXISTS profiles_leader_idx ON public.profiles USING btree (leader_id);
 
 
 --
 -- Name: reactions_entity_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX reactions_entity_idx ON public.reactions USING btree (entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS reactions_entity_idx ON public.reactions USING btree (entity_type, entity_id);
 
 
 --
 -- Name: reminder_templates_text_uniq; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX reminder_templates_text_uniq ON public.reminder_templates USING btree (md5(lower(regexp_replace(text, '\s+'::text, ' '::text, 'g'::text))));
+CREATE UNIQUE INDEX IF NOT EXISTS reminder_templates_text_uniq ON public.reminder_templates USING btree (md5(lower(regexp_replace(text, '\s+'::text, ' '::text, 'g'::text))));
 
 
 --
 -- Name: verse_topics_topic_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX verse_topics_topic_idx ON public.verse_topics USING btree (topic);
+CREATE INDEX IF NOT EXISTS verse_topics_topic_idx ON public.verse_topics USING btree (topic);
 
 
 --
 -- Name: comments comments_notify; Type: TRIGGER; Schema: public; Owner: -
 --
 
+DROP TRIGGER IF EXISTS comments_notify ON public.comments;
 CREATE TRIGGER comments_notify AFTER INSERT ON public.comments FOR EACH ROW EXECUTE FUNCTION public.notify_comment();
 
 
@@ -2206,6 +2292,7 @@ CREATE TRIGGER comments_notify AFTER INSERT ON public.comments FOR EACH ROW EXEC
 -- Name: daily_content daily_content_similarity; Type: TRIGGER; Schema: public; Owner: -
 --
 
+DROP TRIGGER IF EXISTS daily_content_similarity ON public.daily_content;
 CREATE TRIGGER daily_content_similarity BEFORE INSERT OR UPDATE OF reminder ON public.daily_content FOR EACH ROW EXECUTE FUNCTION public.reject_similar_reminder();
 
 
@@ -2213,6 +2300,7 @@ CREATE TRIGGER daily_content_similarity BEFORE INSERT OR UPDATE OF reminder ON p
 -- Name: daily_reminders daily_reminders_similarity; Type: TRIGGER; Schema: public; Owner: -
 --
 
+DROP TRIGGER IF EXISTS daily_reminders_similarity ON public.daily_reminders;
 CREATE TRIGGER daily_reminders_similarity BEFORE INSERT OR UPDATE OF reminder ON public.daily_reminders FOR EACH ROW EXECUTE FUNCTION public.reject_similar_reminder();
 
 
@@ -2220,6 +2308,7 @@ CREATE TRIGGER daily_reminders_similarity BEFORE INSERT OR UPDATE OF reminder ON
 -- Name: discussions discussions_notify_mentions; Type: TRIGGER; Schema: public; Owner: -
 --
 
+DROP TRIGGER IF EXISTS discussions_notify_mentions ON public.discussions;
 CREATE TRIGGER discussions_notify_mentions AFTER INSERT ON public.discussions FOR EACH ROW EXECUTE FUNCTION public.notify_post_mentions();
 
 
@@ -2227,6 +2316,7 @@ CREATE TRIGGER discussions_notify_mentions AFTER INSERT ON public.discussions FO
 -- Name: enrollments enrollments_notify; Type: TRIGGER; Schema: public; Owner: -
 --
 
+DROP TRIGGER IF EXISTS enrollments_notify ON public.enrollments;
 CREATE TRIGGER enrollments_notify AFTER INSERT ON public.enrollments FOR EACH ROW EXECUTE FUNCTION public.notify_enrollment();
 
 
@@ -2234,6 +2324,7 @@ CREATE TRIGGER enrollments_notify AFTER INSERT ON public.enrollments FOR EACH RO
 -- Name: lesson_completions lesson_completions_notify; Type: TRIGGER; Schema: public; Owner: -
 --
 
+DROP TRIGGER IF EXISTS lesson_completions_notify ON public.lesson_completions;
 CREATE TRIGGER lesson_completions_notify AFTER INSERT ON public.lesson_completions FOR EACH ROW EXECUTE FUNCTION public.notify_lesson_verified();
 
 
@@ -2241,6 +2332,7 @@ CREATE TRIGGER lesson_completions_notify AFTER INSERT ON public.lesson_completio
 -- Name: event_interests on_event_interest; Type: TRIGGER; Schema: public; Owner: -
 --
 
+DROP TRIGGER IF EXISTS on_event_interest ON public.event_interests;
 CREATE TRIGGER on_event_interest AFTER INSERT ON public.event_interests FOR EACH ROW EXECUTE FUNCTION public.notify_event_interest();
 
 
@@ -2248,6 +2340,7 @@ CREATE TRIGGER on_event_interest AFTER INSERT ON public.event_interests FOR EACH
 -- Name: ministry_interests on_ministry_interest; Type: TRIGGER; Schema: public; Owner: -
 --
 
+DROP TRIGGER IF EXISTS on_ministry_interest ON public.ministry_interests;
 CREATE TRIGGER on_ministry_interest AFTER INSERT ON public.ministry_interests FOR EACH ROW EXECUTE FUNCTION public.notify_ministry_interest();
 
 
@@ -2255,6 +2348,7 @@ CREATE TRIGGER on_ministry_interest AFTER INSERT ON public.ministry_interests FO
 -- Name: discussions on_new_discussion; Type: TRIGGER; Schema: public; Owner: -
 --
 
+DROP TRIGGER IF EXISTS on_new_discussion ON public.discussions;
 CREATE TRIGGER on_new_discussion AFTER INSERT ON public.discussions FOR EACH ROW EXECUTE FUNCTION public.notify_new_discussion();
 
 
@@ -2262,6 +2356,7 @@ CREATE TRIGGER on_new_discussion AFTER INSERT ON public.discussions FOR EACH ROW
 -- Name: events on_new_event; Type: TRIGGER; Schema: public; Owner: -
 --
 
+DROP TRIGGER IF EXISTS on_new_event ON public.events;
 CREATE TRIGGER on_new_event AFTER INSERT ON public.events FOR EACH ROW EXECUTE FUNCTION public.notify_new_event();
 
 
@@ -2269,6 +2364,7 @@ CREATE TRIGGER on_new_event AFTER INSERT ON public.events FOR EACH ROW EXECUTE F
 -- Name: news_posts on_new_news; Type: TRIGGER; Schema: public; Owner: -
 --
 
+DROP TRIGGER IF EXISTS on_new_news ON public.news_posts;
 CREATE TRIGGER on_new_news AFTER INSERT ON public.news_posts FOR EACH ROW EXECUTE FUNCTION public.notify_new_news();
 
 
@@ -2276,6 +2372,7 @@ CREATE TRIGGER on_new_news AFTER INSERT ON public.news_posts FOR EACH ROW EXECUT
 -- Name: posts on_new_post; Type: TRIGGER; Schema: public; Owner: -
 --
 
+DROP TRIGGER IF EXISTS on_new_post ON public.posts;
 CREATE TRIGGER on_new_post AFTER INSERT ON public.posts FOR EACH ROW EXECUTE FUNCTION public.notify_new_post();
 
 
@@ -2283,6 +2380,7 @@ CREATE TRIGGER on_new_post AFTER INSERT ON public.posts FOR EACH ROW EXECUTE FUN
 -- Name: posts on_post_approved; Type: TRIGGER; Schema: public; Owner: -
 --
 
+DROP TRIGGER IF EXISTS on_post_approved ON public.posts;
 CREATE TRIGGER on_post_approved AFTER UPDATE OF status ON public.posts FOR EACH ROW EXECUTE FUNCTION public.notify_post_approved();
 
 
@@ -2290,6 +2388,7 @@ CREATE TRIGGER on_post_approved AFTER UPDATE OF status ON public.posts FOR EACH 
 -- Name: posts posts_notify_mentions; Type: TRIGGER; Schema: public; Owner: -
 --
 
+DROP TRIGGER IF EXISTS posts_notify_mentions ON public.posts;
 CREATE TRIGGER posts_notify_mentions AFTER INSERT ON public.posts FOR EACH ROW EXECUTE FUNCTION public.notify_post_mentions();
 
 
@@ -2297,6 +2396,7 @@ CREATE TRIGGER posts_notify_mentions AFTER INSERT ON public.posts FOR EACH ROW E
 -- Name: reactions reactions_notify; Type: TRIGGER; Schema: public; Owner: -
 --
 
+DROP TRIGGER IF EXISTS reactions_notify ON public.reactions;
 CREATE TRIGGER reactions_notify AFTER INSERT ON public.reactions FOR EACH ROW EXECUTE FUNCTION public.notify_reaction();
 
 
@@ -2304,350 +2404,437 @@ CREATE TRIGGER reactions_notify AFTER INSERT ON public.reactions FOR EACH ROW EX
 -- Name: comments comments_author_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.comments
     ADD CONSTRAINT comments_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: course_lessons course_lessons_course_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.course_lessons
     ADD CONSTRAINT course_lessons_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.courses(id) ON DELETE CASCADE;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: courses courses_prereq_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.courses
     ADD CONSTRAINT courses_prereq_id_fkey FOREIGN KEY (prereq_id) REFERENCES public.courses(id) ON DELETE SET NULL;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: daily_assignments daily_assignments_reminder_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.daily_assignments
     ADD CONSTRAINT daily_assignments_reminder_id_fkey FOREIGN KEY (reminder_id) REFERENCES public.daily_reminders(id) ON DELETE RESTRICT;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: daily_assignments daily_assignments_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.daily_assignments
     ADD CONSTRAINT daily_assignments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: daily_assignments daily_assignments_verse_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.daily_assignments
     ADD CONSTRAINT daily_assignments_verse_id_fkey FOREIGN KEY (verse_id) REFERENCES public.daily_verses(id) ON DELETE RESTRICT;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: daily_reminders daily_reminders_reviewed_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.daily_reminders
     ADD CONSTRAINT daily_reminders_reviewed_by_fkey FOREIGN KEY (reviewed_by) REFERENCES public.profiles(id) ON DELETE SET NULL;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: daily_reminders daily_reminders_template_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.daily_reminders
     ADD CONSTRAINT daily_reminders_template_fk FOREIGN KEY (template_id) REFERENCES public.reminder_templates(id) ON DELETE SET NULL;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: daily_reminders daily_reminders_verse_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.daily_reminders
     ADD CONSTRAINT daily_reminders_verse_id_fkey FOREIGN KEY (verse_id) REFERENCES public.daily_verses(id) ON DELETE CASCADE;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: devotional_books devotional_books_name_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.devotional_books
     ADD CONSTRAINT devotional_books_name_fkey FOREIGN KEY (name) REFERENCES public.bible_books(name);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: discussions discussions_author_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.discussions
     ADD CONSTRAINT discussions_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: discussions discussions_moderated_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.discussions
     ADD CONSTRAINT discussions_moderated_by_fkey FOREIGN KEY (moderated_by) REFERENCES public.profiles(id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: enrollments enrollments_course_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.enrollments
     ADD CONSTRAINT enrollments_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.courses(id) ON DELETE CASCADE;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: enrollments enrollments_enrolled_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.enrollments
     ADD CONSTRAINT enrollments_enrolled_by_fkey FOREIGN KEY (enrolled_by) REFERENCES public.profiles(id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: enrollments enrollments_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.enrollments
     ADD CONSTRAINT enrollments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: event_interests event_interests_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.event_interests
     ADD CONSTRAINT event_interests_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.events(id) ON DELETE CASCADE;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: event_interests event_interests_profile_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.event_interests
     ADD CONSTRAINT event_interests_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: events events_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.events
     ADD CONSTRAINT events_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.profiles(id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: lesson_completions lesson_completions_enrollment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.lesson_completions
     ADD CONSTRAINT lesson_completions_enrollment_id_fkey FOREIGN KEY (enrollment_id) REFERENCES public.enrollments(id) ON DELETE CASCADE;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: lesson_completions lesson_completions_lesson_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.lesson_completions
     ADD CONSTRAINT lesson_completions_lesson_id_fkey FOREIGN KEY (lesson_id) REFERENCES public.course_lessons(id) ON DELETE CASCADE;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: lesson_completions lesson_completions_verified_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.lesson_completions
     ADD CONSTRAINT lesson_completions_verified_by_fkey FOREIGN KEY (verified_by) REFERENCES public.profiles(id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: live_videos live_videos_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.live_videos
     ADD CONSTRAINT live_videos_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.profiles(id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: live_videos live_videos_series_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.live_videos
     ADD CONSTRAINT live_videos_series_id_fkey FOREIGN KEY (series_id) REFERENCES public.live_series(id) ON DELETE SET NULL;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: messages messages_recipient_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.messages
     ADD CONSTRAINT messages_recipient_id_fkey FOREIGN KEY (recipient_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: messages messages_sender_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.messages
     ADD CONSTRAINT messages_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: ministries ministries_leader_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.ministries
     ADD CONSTRAINT ministries_leader_id_fkey FOREIGN KEY (leader_id) REFERENCES public.profiles(id) ON DELETE SET NULL;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: ministry_interests ministry_interests_decided_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.ministry_interests
     ADD CONSTRAINT ministry_interests_decided_by_fkey FOREIGN KEY (decided_by) REFERENCES public.profiles(id) ON DELETE SET NULL;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: ministry_interests ministry_interests_ministry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.ministry_interests
     ADD CONSTRAINT ministry_interests_ministry_id_fkey FOREIGN KEY (ministry_id) REFERENCES public.ministries(id) ON DELETE CASCADE;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: ministry_interests ministry_interests_profile_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.ministry_interests
     ADD CONSTRAINT ministry_interests_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: news_posts news_posts_author_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.news_posts
     ADD CONSTRAINT news_posts_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.profiles(id) ON DELETE SET NULL;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: notification_mutes notification_mutes_muted_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.notification_mutes
     ADD CONSTRAINT notification_mutes_muted_id_fkey FOREIGN KEY (muted_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: notification_mutes notification_mutes_muter_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.notification_mutes
     ADD CONSTRAINT notification_mutes_muter_id_fkey FOREIGN KEY (muter_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: notifications notifications_actor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.notifications
     ADD CONSTRAINT notifications_actor_id_fkey FOREIGN KEY (actor_id) REFERENCES public.profiles(id) ON DELETE SET NULL;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: notifications notifications_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.notifications
     ADD CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: posts posts_author_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.posts
     ADD CONSTRAINT posts_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: posts posts_moderated_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.posts
     ADD CONSTRAINT posts_moderated_by_fkey FOREIGN KEY (moderated_by) REFERENCES public.profiles(id);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: profiles profiles_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.profiles
     ADD CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: profiles profiles_leader_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.profiles
     ADD CONSTRAINT profiles_leader_id_fkey FOREIGN KEY (leader_id) REFERENCES public.profiles(id) ON DELETE SET NULL;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: reactions reactions_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.reactions
     ADD CONSTRAINT reactions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: site_content site_content_updated_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.site_content
     ADD CONSTRAINT site_content_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: daily_verses verse_book_is_canonical; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.daily_verses
     ADD CONSTRAINT verse_book_is_canonical FOREIGN KEY (book) REFERENCES public.bible_books(name);
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: verse_topics verse_topics_topic_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.verse_topics
     ADD CONSTRAINT verse_topics_topic_fkey FOREIGN KEY (topic) REFERENCES public.verse_topic_kinds(slug) ON DELETE CASCADE;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: verse_topics verse_topics_verse_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+DO $ddo$ BEGIN
 ALTER TABLE ONLY public.verse_topics
     ADD CONSTRAINT verse_topics_verse_id_fkey FOREIGN KEY (verse_id) REFERENCES public.daily_verses(id) ON DELETE CASCADE;
+EXCEPTION WHEN others THEN null; END $ddo$;
 
 
 --
 -- Name: notification_mutes a mute belongs to the person who set it; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "a mute belongs to the person who set it" ON public.notification_mutes;
 CREATE POLICY "a mute belongs to the person who set it" ON public.notification_mutes USING ((muter_id = auth.uid())) WITH CHECK ((muter_id = auth.uid()));
 
 
@@ -2655,6 +2842,7 @@ CREATE POLICY "a mute belongs to the person who set it" ON public.notification_m
 -- Name: courses admins manage courses; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "admins manage courses" ON public.courses;
 CREATE POLICY "admins manage courses" ON public.courses USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 
@@ -2662,6 +2850,7 @@ CREATE POLICY "admins manage courses" ON public.courses USING (public.is_admin()
 -- Name: enrollments admins manage enrollments; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "admins manage enrollments" ON public.enrollments;
 CREATE POLICY "admins manage enrollments" ON public.enrollments USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 
@@ -2669,6 +2858,7 @@ CREATE POLICY "admins manage enrollments" ON public.enrollments USING (public.is
 -- Name: hero_slides admins manage hero slides; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "admins manage hero slides" ON public.hero_slides;
 CREATE POLICY "admins manage hero slides" ON public.hero_slides USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 
@@ -2676,6 +2866,7 @@ CREATE POLICY "admins manage hero slides" ON public.hero_slides USING (public.is
 -- Name: course_lessons admins manage lessons; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "admins manage lessons" ON public.course_lessons;
 CREATE POLICY "admins manage lessons" ON public.course_lessons USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 
@@ -2683,6 +2874,7 @@ CREATE POLICY "admins manage lessons" ON public.course_lessons USING (public.is_
 -- Name: ministries admins manage ministries; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "admins manage ministries" ON public.ministries;
 CREATE POLICY "admins manage ministries" ON public.ministries USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 
@@ -2690,6 +2882,7 @@ CREATE POLICY "admins manage ministries" ON public.ministries USING (public.is_a
 -- Name: news_posts admins manage news; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "admins manage news" ON public.news_posts;
 CREATE POLICY "admins manage news" ON public.news_posts USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 
@@ -2697,6 +2890,7 @@ CREATE POLICY "admins manage news" ON public.news_posts USING (public.is_admin()
 -- Name: profiles admins manage profiles; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "admins manage profiles" ON public.profiles;
 CREATE POLICY "admins manage profiles" ON public.profiles USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 
@@ -2704,6 +2898,7 @@ CREATE POLICY "admins manage profiles" ON public.profiles USING (public.is_admin
 -- Name: lesson_completions admins verify completions; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "admins verify completions" ON public.lesson_completions;
 CREATE POLICY "admins verify completions" ON public.lesson_completions USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 
@@ -2711,6 +2906,7 @@ CREATE POLICY "admins verify completions" ON public.lesson_completions USING (pu
 -- Name: comments approved users comment; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "approved users comment" ON public.comments;
 CREATE POLICY "approved users comment" ON public.comments FOR INSERT WITH CHECK (((author_id = auth.uid()) AND public.is_approved() AND (((entity_type = 'post'::text) AND (EXISTS ( SELECT 1
    FROM public.posts p
   WHERE ((p.id = comments.entity_id) AND (p.status = 'approved'::public.approval_status))))) OR ((entity_type = 'discussion'::text) AND (EXISTS ( SELECT 1
@@ -2722,6 +2918,7 @@ CREATE POLICY "approved users comment" ON public.comments FOR INSERT WITH CHECK 
 -- Name: discussions approved users create discussions; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "approved users create discussions" ON public.discussions;
 CREATE POLICY "approved users create discussions" ON public.discussions FOR INSERT WITH CHECK (((author_id = auth.uid()) AND public.is_approved()));
 
 
@@ -2729,6 +2926,7 @@ CREATE POLICY "approved users create discussions" ON public.discussions FOR INSE
 -- Name: posts approved users create posts; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "approved users create posts" ON public.posts;
 CREATE POLICY "approved users create posts" ON public.posts FOR INSERT WITH CHECK (((author_id = auth.uid()) AND public.is_approved()));
 
 
@@ -2736,6 +2934,7 @@ CREATE POLICY "approved users create posts" ON public.posts FOR INSERT WITH CHEC
 -- Name: reactions approved users react; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "approved users react" ON public.reactions;
 CREATE POLICY "approved users react" ON public.reactions FOR INSERT WITH CHECK (((user_id = auth.uid()) AND public.is_approved()));
 
 
@@ -2743,6 +2942,7 @@ CREATE POLICY "approved users react" ON public.reactions FOR INSERT WITH CHECK (
 -- Name: messages approved users send messages; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "approved users send messages" ON public.messages;
 CREATE POLICY "approved users send messages" ON public.messages FOR INSERT WITH CHECK (((sender_id = auth.uid()) AND public.is_approved()));
 
 
@@ -2750,6 +2950,7 @@ CREATE POLICY "approved users send messages" ON public.messages FOR INSERT WITH 
 -- Name: daily_assignments assignments are private; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "assignments are private" ON public.daily_assignments;
 CREATE POLICY "assignments are private" ON public.daily_assignments FOR SELECT USING ((user_id = auth.uid()));
 
 
@@ -2757,6 +2958,7 @@ CREATE POLICY "assignments are private" ON public.daily_assignments FOR SELECT U
 -- Name: comments author or staff deletes comment; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "author or staff deletes comment" ON public.comments;
 CREATE POLICY "author or staff deletes comment" ON public.comments FOR DELETE USING (((author_id = auth.uid()) OR public.is_staff()));
 
 
@@ -2764,6 +2966,7 @@ CREATE POLICY "author or staff deletes comment" ON public.comments FOR DELETE US
 -- Name: posts author updates own pending; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "author updates own pending" ON public.posts;
 CREATE POLICY "author updates own pending" ON public.posts FOR UPDATE USING (((author_id = auth.uid()) AND (status = 'pending'::public.approval_status))) WITH CHECK ((author_id = auth.uid()));
 
 
@@ -2771,6 +2974,7 @@ CREATE POLICY "author updates own pending" ON public.posts FOR UPDATE USING (((a
 -- Name: discussions author updates own pending discussion; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "author updates own pending discussion" ON public.discussions;
 CREATE POLICY "author updates own pending discussion" ON public.discussions FOR UPDATE USING (((author_id = auth.uid()) AND (status = 'pending'::public.approval_status))) WITH CHECK ((author_id = auth.uid()));
 
 
@@ -2838,6 +3042,7 @@ ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
 -- Name: courses everyone reads active courses; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "everyone reads active courses" ON public.courses;
 CREATE POLICY "everyone reads active courses" ON public.courses FOR SELECT USING ((is_active OR public.is_staff()));
 
 
@@ -2845,6 +3050,7 @@ CREATE POLICY "everyone reads active courses" ON public.courses FOR SELECT USING
 -- Name: events everyone reads events; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "everyone reads events" ON public.events;
 CREATE POLICY "everyone reads events" ON public.events FOR SELECT USING (true);
 
 
@@ -2852,6 +3058,7 @@ CREATE POLICY "everyone reads events" ON public.events FOR SELECT USING (true);
 -- Name: hero_slides everyone reads hero slides; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "everyone reads hero slides" ON public.hero_slides;
 CREATE POLICY "everyone reads hero slides" ON public.hero_slides FOR SELECT USING ((is_active OR public.is_admin()));
 
 
@@ -2859,6 +3066,7 @@ CREATE POLICY "everyone reads hero slides" ON public.hero_slides FOR SELECT USIN
 -- Name: course_lessons everyone reads lessons of active courses; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "everyone reads lessons of active courses" ON public.course_lessons;
 CREATE POLICY "everyone reads lessons of active courses" ON public.course_lessons FOR SELECT USING ((public.is_staff() OR (EXISTS ( SELECT 1
    FROM public.courses c
   WHERE ((c.id = course_lessons.course_id) AND c.is_active)))));
@@ -2868,6 +3076,7 @@ CREATE POLICY "everyone reads lessons of active courses" ON public.course_lesson
 -- Name: live_series everyone reads live series; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "everyone reads live series" ON public.live_series;
 CREATE POLICY "everyone reads live series" ON public.live_series FOR SELECT USING (true);
 
 
@@ -2875,6 +3084,7 @@ CREATE POLICY "everyone reads live series" ON public.live_series FOR SELECT USIN
 -- Name: live_videos everyone reads live videos; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "everyone reads live videos" ON public.live_videos;
 CREATE POLICY "everyone reads live videos" ON public.live_videos FOR SELECT USING (true);
 
 
@@ -2882,6 +3092,7 @@ CREATE POLICY "everyone reads live videos" ON public.live_videos FOR SELECT USIN
 -- Name: news_posts everyone reads news; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "everyone reads news" ON public.news_posts;
 CREATE POLICY "everyone reads news" ON public.news_posts FOR SELECT USING (true);
 
 
@@ -2895,6 +3106,7 @@ ALTER TABLE public.hero_slides ENABLE ROW LEVEL SECURITY;
 -- Name: ministry_interests leaders decide ministry membership; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "leaders decide ministry membership" ON public.ministry_interests;
 CREATE POLICY "leaders decide ministry membership" ON public.ministry_interests FOR UPDATE USING (public.can_manage_ministry(ministry_id)) WITH CHECK (public.can_manage_ministry(ministry_id));
 
 
@@ -2920,6 +3132,7 @@ ALTER TABLE public.live_videos ENABLE ROW LEVEL SECURITY;
 -- Name: event_interests members mark themselves interested; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "members mark themselves interested" ON public.event_interests;
 CREATE POLICY "members mark themselves interested" ON public.event_interests FOR INSERT WITH CHECK (((profile_id = auth.uid()) AND public.is_approved()));
 
 
@@ -2927,6 +3140,7 @@ CREATE POLICY "members mark themselves interested" ON public.event_interests FOR
 -- Name: ministries members read active ministries; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "members read active ministries" ON public.ministries;
 CREATE POLICY "members read active ministries" ON public.ministries FOR SELECT USING ((((is_active = true) AND public.is_approved()) OR public.is_staff()));
 
 
@@ -2934,6 +3148,7 @@ CREATE POLICY "members read active ministries" ON public.ministries FOR SELECT U
 -- Name: ministry_interests members record their own interest; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "members record their own interest" ON public.ministry_interests;
 CREATE POLICY "members record their own interest" ON public.ministry_interests FOR INSERT WITH CHECK (((profile_id = auth.uid()) AND public.is_approved()));
 
 
@@ -2941,6 +3156,7 @@ CREATE POLICY "members record their own interest" ON public.ministry_interests F
 -- Name: event_interests members see who is coming; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "members see who is coming" ON public.event_interests;
 CREATE POLICY "members see who is coming" ON public.event_interests FOR SELECT USING ((public.is_approved() OR public.is_staff()));
 
 
@@ -2948,6 +3164,7 @@ CREATE POLICY "members see who is coming" ON public.event_interests FOR SELECT U
 -- Name: event_interests members withdraw their own interest; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "members withdraw their own interest" ON public.event_interests;
 CREATE POLICY "members withdraw their own interest" ON public.event_interests FOR DELETE USING ((profile_id = auth.uid()));
 
 
@@ -2955,6 +3172,7 @@ CREATE POLICY "members withdraw their own interest" ON public.event_interests FO
 -- Name: ministry_interests members withdraw their own interest; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "members withdraw their own interest" ON public.ministry_interests;
 CREATE POLICY "members withdraw their own interest" ON public.ministry_interests FOR DELETE USING ((profile_id = auth.uid()));
 
 
@@ -2998,6 +3216,7 @@ ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 -- Name: enrollments own enrollments visible; staff sees all; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "own enrollments visible; staff sees all" ON public.enrollments;
 CREATE POLICY "own enrollments visible; staff sees all" ON public.enrollments FOR SELECT USING (((user_id = auth.uid()) OR public.is_staff()));
 
 
@@ -3023,6 +3242,7 @@ ALTER TABLE public.reactions ENABLE ROW LEVEL SECURITY;
 -- Name: discussions read approved discussions; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "read approved discussions" ON public.discussions;
 CREATE POLICY "read approved discussions" ON public.discussions FOR SELECT USING (((status = 'approved'::public.approval_status) OR (author_id = auth.uid()) OR public.is_staff()));
 
 
@@ -3030,6 +3250,7 @@ CREATE POLICY "read approved discussions" ON public.discussions FOR SELECT USING
 -- Name: posts read approved posts; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "read approved posts" ON public.posts;
 CREATE POLICY "read approved posts" ON public.posts FOR SELECT USING (((status = 'approved'::public.approval_status) OR (author_id = auth.uid()) OR public.is_staff()));
 
 
@@ -3037,6 +3258,7 @@ CREATE POLICY "read approved posts" ON public.posts FOR SELECT USING (((status =
 -- Name: profiles read basic profile info if approved; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "read basic profile info if approved" ON public.profiles;
 CREATE POLICY "read basic profile info if approved" ON public.profiles FOR SELECT USING (((id = auth.uid()) OR public.is_staff() OR (public.is_approved() AND (account_status = 'approved'::public.approval_status))));
 
 
@@ -3044,6 +3266,7 @@ CREATE POLICY "read basic profile info if approved" ON public.profiles FOR SELEC
 -- Name: comments read comments on approved content; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "read comments on approved content" ON public.comments;
 CREATE POLICY "read comments on approved content" ON public.comments FOR SELECT USING ((public.is_staff() OR ((entity_type = 'post'::text) AND (EXISTS ( SELECT 1
    FROM public.posts p
   WHERE ((p.id = comments.entity_id) AND (p.status = 'approved'::public.approval_status))))) OR ((entity_type = 'discussion'::text) AND (EXISTS ( SELECT 1
@@ -3055,6 +3278,7 @@ CREATE POLICY "read comments on approved content" ON public.comments FOR SELECT 
 -- Name: ministry_interests read own interest, leaders read theirs; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "read own interest, leaders read theirs" ON public.ministry_interests;
 CREATE POLICY "read own interest, leaders read theirs" ON public.ministry_interests FOR SELECT USING (((profile_id = auth.uid()) OR public.is_staff() OR (EXISTS ( SELECT 1
    FROM public.ministries m
   WHERE ((m.id = ministry_interests.ministry_id) AND (m.leader_id = auth.uid()))))));
@@ -3064,6 +3288,7 @@ CREATE POLICY "read own interest, leaders read theirs" ON public.ministry_intere
 -- Name: messages read own messages; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "read own messages" ON public.messages;
 CREATE POLICY "read own messages" ON public.messages FOR SELECT USING (((sender_id = auth.uid()) OR (recipient_id = auth.uid())));
 
 
@@ -3071,6 +3296,7 @@ CREATE POLICY "read own messages" ON public.messages FOR SELECT USING (((sender_
 -- Name: notifications read own notifications; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "read own notifications" ON public.notifications;
 CREATE POLICY "read own notifications" ON public.notifications FOR SELECT USING ((user_id = auth.uid()));
 
 
@@ -3078,6 +3304,7 @@ CREATE POLICY "read own notifications" ON public.notifications FOR SELECT USING 
 -- Name: lesson_completions read own or all-if-staff completions; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "read own or all-if-staff completions" ON public.lesson_completions;
 CREATE POLICY "read own or all-if-staff completions" ON public.lesson_completions FOR SELECT USING ((public.is_staff() OR (EXISTS ( SELECT 1
    FROM public.enrollments e
   WHERE ((e.id = lesson_completions.enrollment_id) AND (e.user_id = auth.uid()))))));
@@ -3087,6 +3314,7 @@ CREATE POLICY "read own or all-if-staff completions" ON public.lesson_completion
 -- Name: reactions read reactions on approved content; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "read reactions on approved content" ON public.reactions;
 CREATE POLICY "read reactions on approved content" ON public.reactions FOR SELECT USING ((public.is_staff() OR ((entity_type = 'post'::text) AND (EXISTS ( SELECT 1
    FROM public.posts p
   WHERE ((p.id = reactions.entity_id) AND (p.status = 'approved'::public.approval_status))))) OR ((entity_type = 'discussion'::text) AND (EXISTS ( SELECT 1
@@ -3098,6 +3326,7 @@ CREATE POLICY "read reactions on approved content" ON public.reactions FOR SELEC
 -- Name: messages recipient marks read; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "recipient marks read" ON public.messages;
 CREATE POLICY "recipient marks read" ON public.messages FOR UPDATE USING ((recipient_id = auth.uid())) WITH CHECK ((recipient_id = auth.uid()));
 
 
@@ -3105,6 +3334,7 @@ CREATE POLICY "recipient marks read" ON public.messages FOR UPDATE USING ((recip
 -- Name: reactions remove own reaction; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "remove own reaction" ON public.reactions;
 CREATE POLICY "remove own reaction" ON public.reactions FOR DELETE USING ((user_id = auth.uid()));
 
 
@@ -3118,6 +3348,7 @@ ALTER TABLE public.site_content ENABLE ROW LEVEL SECURITY;
 -- Name: site_content site_content_read; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS site_content_read ON public.site_content;
 CREATE POLICY site_content_read ON public.site_content FOR SELECT USING (true);
 
 
@@ -3125,6 +3356,7 @@ CREATE POLICY site_content_read ON public.site_content FOR SELECT USING (true);
 -- Name: site_content site_content_write; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS site_content_write ON public.site_content;
 CREATE POLICY site_content_write ON public.site_content USING ((EXISTS ( SELECT 1
    FROM public.profiles p
   WHERE ((p.id = auth.uid()) AND (p.role = 'super_admin'::public.user_role))))) WITH CHECK ((EXISTS ( SELECT 1
@@ -3136,6 +3368,7 @@ CREATE POLICY site_content_write ON public.site_content USING ((EXISTS ( SELECT 
 -- Name: daily_reminders staff decide reminders; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "staff decide reminders" ON public.daily_reminders;
 CREATE POLICY "staff decide reminders" ON public.daily_reminders FOR UPDATE USING (public.is_staff()) WITH CHECK (public.is_staff());
 
 
@@ -3143,6 +3376,7 @@ CREATE POLICY "staff decide reminders" ON public.daily_reminders FOR UPDATE USIN
 -- Name: discussions staff deletes discussions; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "staff deletes discussions" ON public.discussions;
 CREATE POLICY "staff deletes discussions" ON public.discussions FOR DELETE USING ((public.is_staff() OR (author_id = auth.uid())));
 
 
@@ -3150,6 +3384,7 @@ CREATE POLICY "staff deletes discussions" ON public.discussions FOR DELETE USING
 -- Name: posts staff deletes posts; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "staff deletes posts" ON public.posts;
 CREATE POLICY "staff deletes posts" ON public.posts FOR DELETE USING ((public.is_staff() OR (author_id = auth.uid())));
 
 
@@ -3157,6 +3392,7 @@ CREATE POLICY "staff deletes posts" ON public.posts FOR DELETE USING ((public.is
 -- Name: events staff manage events; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "staff manage events" ON public.events;
 CREATE POLICY "staff manage events" ON public.events USING (public.is_staff()) WITH CHECK (public.is_staff());
 
 
@@ -3164,6 +3400,7 @@ CREATE POLICY "staff manage events" ON public.events USING (public.is_staff()) W
 -- Name: live_series staff manage live series; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "staff manage live series" ON public.live_series;
 CREATE POLICY "staff manage live series" ON public.live_series USING (public.is_staff()) WITH CHECK (public.is_staff());
 
 
@@ -3171,6 +3408,7 @@ CREATE POLICY "staff manage live series" ON public.live_series USING (public.is_
 -- Name: live_videos staff manage live videos; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "staff manage live videos" ON public.live_videos;
 CREATE POLICY "staff manage live videos" ON public.live_videos USING (public.is_staff()) WITH CHECK (public.is_staff());
 
 
@@ -3178,6 +3416,7 @@ CREATE POLICY "staff manage live videos" ON public.live_videos USING (public.is_
 -- Name: discussions staff moderates discussions; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "staff moderates discussions" ON public.discussions;
 CREATE POLICY "staff moderates discussions" ON public.discussions FOR UPDATE USING (public.is_staff()) WITH CHECK (public.is_staff());
 
 
@@ -3185,6 +3424,7 @@ CREATE POLICY "staff moderates discussions" ON public.discussions FOR UPDATE USI
 -- Name: posts staff moderates posts; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "staff moderates posts" ON public.posts;
 CREATE POLICY "staff moderates posts" ON public.posts FOR UPDATE USING (public.is_staff()) WITH CHECK (public.is_staff());
 
 
@@ -3192,6 +3432,7 @@ CREATE POLICY "staff moderates posts" ON public.posts FOR UPDATE USING (public.i
 -- Name: daily_reminders staff review reminders; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "staff review reminders" ON public.daily_reminders;
 CREATE POLICY "staff review reminders" ON public.daily_reminders FOR SELECT USING (public.is_staff());
 
 
@@ -3199,6 +3440,7 @@ CREATE POLICY "staff review reminders" ON public.daily_reminders FOR SELECT USIN
 -- Name: profiles update own basic info; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "update own basic info" ON public.profiles;
 CREATE POLICY "update own basic info" ON public.profiles FOR UPDATE USING ((id = auth.uid())) WITH CHECK (((id = auth.uid()) AND (role = ( SELECT profiles_1.role
    FROM public.profiles profiles_1
   WHERE (profiles_1.id = auth.uid()))) AND (account_status = ( SELECT profiles_1.account_status
@@ -3212,6 +3454,7 @@ CREATE POLICY "update own basic info" ON public.profiles FOR UPDATE USING ((id =
 -- Name: notifications update own notifications; Type: POLICY; Schema: public; Owner: -
 --
 
+DROP POLICY IF EXISTS "update own notifications" ON public.notifications;
 CREATE POLICY "update own notifications" ON public.notifications FOR UPDATE USING ((user_id = auth.uid())) WITH CHECK ((user_id = auth.uid()));
 
 
