@@ -99,6 +99,22 @@ export default function NotificationBell() {
     load();
   }
 
+  async function clearAll() {
+    if (items.length === 0) return;
+    if (!window.confirm('Clear every notification? This cannot be undone.')) return;
+    // RLS gates the delete to rows belonging to the caller, so a bare delete
+    // is safe but PostgREST refuses a no-filter delete — pass one anyway.
+    await supabase.from('notifications').delete().not('id', 'is', null);
+    load();
+  }
+
+  async function clearOne(id, e) {
+    e?.preventDefault();
+    e?.stopPropagation();
+    await supabase.from('notifications').delete().eq('id', id);
+    load();
+  }
+
   function renderMessage(n) {
     const who = n.actor?.full_name || 'Someone';
     const verb = KIND_TEXT[n.kind] || 'notified you';
@@ -115,9 +131,12 @@ export default function NotificationBell() {
     else if (n.kind === 'event_interest') suffix = ` ${n.metadata?.title || 'an event'}`;
     else if (n.kind?.startsWith('new_')) suffix = n.metadata?.title ? `: ${n.metadata.title}` : '';
     else if (n.kind === 'promoted') {
+      // Server-picked one-liner, stored on the row so it does not shuffle
+      // between reloads. Old rows without metadata.message keep working.
+      if (n.metadata?.message) return n.metadata.message;
       const name = n.metadata?.full_name || 'A member';
       const to   = n.metadata?.to || 'leader';
-      return `${name} has been raised up as a ${to}. Rejoice with the household.`;
+      return `${name} is now a ${to}!`;
     }
     return `${who} ${verb}${suffix}`;
   }
@@ -137,11 +156,16 @@ export default function NotificationBell() {
 
       {open && (
         <div className="absolute right-0 mt-2 w-80 max-h-[70vh] overflow-auto bg-white rounded-2xl border border-silver-light shadow-lg z-50">
-          <div className="sticky top-0 bg-white/95 backdrop-blur px-4 py-2.5 border-b border-silver-light flex items-center justify-between">
+          <div className="sticky top-0 bg-white/95 backdrop-blur px-4 py-2.5 border-b border-silver-light flex items-center justify-between gap-3">
             <p className="font-semibold text-sm">Notifications</p>
-            {unread > 0 && (
-              <button onClick={markAllRead} className="text-xs text-brand hover:underline">Mark all read</button>
-            )}
+            <div className="flex items-center gap-3">
+              {unread > 0 && (
+                <button onClick={markAllRead} className="text-xs text-brand hover:underline">Mark all read</button>
+              )}
+              {items.length > 0 && (
+                <button onClick={clearAll} className="text-xs text-ink/50 hover:text-brand hover:underline">Clear all</button>
+              )}
+            </div>
           </div>
           {items.length === 0 ? (
             <p className="text-sm text-ink/60 text-center py-8">You're all caught up.</p>
@@ -173,6 +197,14 @@ export default function NotificationBell() {
                       <p className="text-xs text-ink/50 mt-0.5">{timeAgo(n.created_at)}</p>
                     </div>
                     {!n.read_at && <span className="mt-1 w-2 h-2 rounded-full bg-brand" />}
+                    <button
+                      onClick={(e) => clearOne(n.id, e)}
+                      aria-label="Dismiss notification"
+                      title="Dismiss"
+                      className="ml-1 mt-0.5 rounded-full px-1.5 text-ink/40 hover:bg-silver-light hover:text-ink"
+                    >
+                      ×
+                    </button>
                   </a>
                 </li>
               ))}
