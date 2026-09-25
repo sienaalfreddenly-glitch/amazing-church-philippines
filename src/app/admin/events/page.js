@@ -4,10 +4,23 @@ import { isStaff } from '@/lib/roles';
 import ConfirmDeleteEventButton from '@/components/ConfirmDeleteEventButton';
 import { IconMapPin } from '@/components/Icons';
 import Link from 'next/link';
+import { eventDate } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
-const dtLocal = (v) => v ? new Date(v).toISOString().slice(0, 16) : '';
+// The datetime-local input needs a 'YYYY-MM-DDTHH:MM' string. We render the
+// stored UTC as Asia/Manila (+08:00) so the admin sees the same wall-clock
+// time they typed, regardless of the browser timezone.
+function dtLocal(v) {
+  if (!v) return '';
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Manila',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  }).formatToParts(new Date(v));
+  const get = (t) => parts.find((p) => p.type === t)?.value;
+  return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}`;
+}
 
 export default async function ManageEvents() {
   const { profile } = await getSessionAndProfile();
@@ -61,7 +74,7 @@ function EventCard({ event }) {
       <summary className="cursor-pointer flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-wider text-brand font-semibold">
-            {new Date(event.starts_at).toLocaleString()}
+            {eventDate(event.starts_at)} PHT
           </p>
           <p className="font-semibold text-lg">{event.title}</p>
           {event.location && (
