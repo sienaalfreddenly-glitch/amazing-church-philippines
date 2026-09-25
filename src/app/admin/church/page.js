@@ -28,7 +28,10 @@ export default async function AdminChurchPage() {
   }
 
   const supabase = createClient();
-  const [{ data: church }, { data: staff }] = await Promise.all([
+  // Fetch staff without can_post_as_church so a prod DB missing that column
+  // still loads the list; then attempt to enrich with the grant separately
+  // and quietly ignore if the column is not there yet.
+  const [{ data: church }, { data: staffRows }] = await Promise.all([
     supabase
       .from('profiles')
       .select('id, full_name, avatar_url')
@@ -36,10 +39,20 @@ export default async function AdminChurchPage() {
       .maybeSingle(),
     supabase
       .from('profiles')
-      .select('id, full_name, email, avatar_url, role, can_post_as_church')
+      .select('id, full_name, email, avatar_url, role')
       .in('role', ['admin', 'moderator'])
       .order('full_name', { ascending: true }),
   ]);
+
+  const staff = staffRows || [];
+  if (staff.length > 0) {
+    const { data: grants } = await supabase
+      .from('profiles')
+      .select('id, can_post_as_church')
+      .in('id', staff.map((s) => s.id));
+    const grantById = new Map((grants || []).map((g) => [g.id, !!g.can_post_as_church]));
+    for (const s of staff) s.can_post_as_church = grantById.get(s.id) || false;
+  }
 
   return (
     <div className="stack">
@@ -83,7 +96,7 @@ export default async function AdminChurchPage() {
                 Super admins always may
               </span>
             </div>
-            {(staff || []).length === 0 ? (
+            {staff.length === 0 ? (
               <p className="text-sm text-ink/60">
                 No admins or moderators yet. Promote someone to Admin or Moderator
                 from <Link href="/admin/users" className="text-brand underline">Members</Link> first.
