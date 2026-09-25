@@ -110,7 +110,9 @@ export default function Signup() {
               <select id="leader" className="input" value={leaderId} onChange={e=>setLeaderId(e.target.value)}>
                 <option value="">I do not have one yet</option>
                 {leaders.map((l) => (
-                  <option key={l.id} value={l.id}>{l.full_name}</option>
+                  <option key={l.id} value={l.id}>
+                    {l.title ? `${l.full_name} — ${l.title}` : l.full_name}
+                  </option>
                 ))}
               </select>
               <p className="mt-1 text-xs text-ink/45">

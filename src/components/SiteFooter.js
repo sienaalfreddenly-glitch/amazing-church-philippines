@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Reveal from '@/components/Reveal';
+import { getContent } from '@/lib/content';
 
 /**
  * The final scene.
@@ -45,8 +46,13 @@ function LinkColumn({ heading, links, delay }) {
   );
 }
 
-export default function SiteFooter() {
+export default async function SiteFooter() {
   const year = new Date().getFullYear();
+  const [eyebrow, statement, copyrightSuffix] = await Promise.all([
+    getContent('footer.eyebrow'),
+    getContent('footer.statement'),
+    getContent('footer.copyright'),
+  ]);
 
   return (
     <footer className="site-footer">
@@ -55,10 +61,8 @@ export default function SiteFooter() {
 
       <div className="footer-inner">
         <Reveal>
-          <p className="footer-eyebrow gilt-text">Amazing Church Philippines</p>
-          <p className="footer-statement">
-            We win souls and make them disciples of Jesus
-          </p>
+          <p className="footer-eyebrow gilt-text">{eyebrow}</p>
+          <p className="footer-statement">{statement}</p>
         </Reveal>
 
         <div className="footer-columns">
@@ -89,7 +93,7 @@ export default function SiteFooter() {
         </div>
 
         <Reveal delay={320} as="div" className="footer-baseline">
-          <p className="nums">© {year} Amazing Church Philippines</p>
+          <p className="nums">© {year} {copyrightSuffix}</p>
           <nav aria-label="Legal" className="footer-legal">
             {LEGAL.map((l) => (
               <Link key={l.href} href={l.href} className="footer-link">
