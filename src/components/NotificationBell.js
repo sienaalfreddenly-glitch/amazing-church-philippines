@@ -156,7 +156,15 @@ export default function NotificationBell() {
                         the person who pressed the button, so the avatar and
                         name shown beside the row are the church's. */}
                     {n.kind === 'promoted' ? (
-                      <Avatar url="/logo.png" name="Amazing Church Philippines" size={34} fit="contain" />
+                      // Actor is the church profile row, so its avatar comes
+                      // through the join — fall back to the site logo only
+                      // if that avatar has been cleared.
+                      <Avatar
+                        url={n.actor?.avatar_url || '/logo.png'}
+                        name={n.actor?.full_name || 'Amazing Church Philippines'}
+                        size={34}
+                        fit="contain"
+                      />
                     ) : (
                       <Avatar url={n.actor?.avatar_url} name={n.actor?.full_name || ''} size={34} />
                     )}

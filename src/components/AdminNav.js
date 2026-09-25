@@ -27,6 +27,7 @@ const TABS = [
   // admin who is one click from becoming super feels furtive; the page's
   // refusal message is honest about the reason.
   { href: '/admin/content', label: 'Site copy', admin: true },
+  { href: '/admin/church',  label: 'Church account', admin: true },
 ];
 
 export default function AdminNav({ isAdmin }) {

@@ -35,9 +35,10 @@ export default async function LeadersPage() {
   const supabase = createClient();
   const { data: people } = await supabase
     .from('profiles')
-    .select('id, full_name, email, avatar_url, role, leader_id, is_leader, title, facebook_url, instagram_url')
+    .select('id, full_name, email, avatar_url, role, leader_id, is_leader, title, is_hidden, facebook_url, instagram_url')
     .eq('account_status', 'approved')
     .neq('role', 'super_admin')      // Super Admin doesn't appear on the org chart
+    .eq('is_hidden', false)          // Hides the maintenance and church accounts too
     .order('full_name', { ascending: true });
 
   // One call returns every number this viewer may see: their own, their group's,

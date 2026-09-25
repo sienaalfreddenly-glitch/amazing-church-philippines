@@ -29,7 +29,7 @@ export default async function ManageUsers() {
   const [{ data: users, error }, { data: allCompletions }] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id, full_name, email, avatar_url, role, account_status, leader_id, is_leader, title, created_at')
+      .select('id, full_name, email, avatar_url, role, account_status, leader_id, is_leader, title, is_hidden, created_at')
       .order('created_at', { ascending: false }),
     supabase.from('lesson_completions')
       .select('verified_at, enrollment:enrollments(user_id), lesson:course_lessons(title, ord, course:courses(code))')
@@ -39,10 +39,9 @@ export default async function ManageUsers() {
   const { data: contacts } = await supabase.rpc('visible_contacts');
   const contactById = new Map((contacts || []).map(c => [c.id, c.contact_number]));
 
-  // Super admins are hidden from every other viewer. Nobody from Head Pastor
-  // down to Disciple should see the maintenance account on this list; only
-  // another super admin can act on it here.
-  const list = (users || []).filter(u => viewerIsSuper || u.role !== 'super_admin');
+  // Super admins and every is_hidden account (maintenance, church) are
+  // invisible to non-super viewers. Only a super admin can act on them here.
+  const list = (users || []).filter(u => viewerIsSuper || (u.role !== 'super_admin' && !u.is_hidden));
   const leaders = list.filter(u => u.is_leader);
   const latestByUser = new Map();
   (allCompletions || []).forEach(c => {

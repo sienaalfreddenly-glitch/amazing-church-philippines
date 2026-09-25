@@ -44,12 +44,12 @@ function Media({ url, authorName }) {
 }
 
 function Byline({ item, size = 40 }) {
-  // A system post is written by the church, not by a member. The real author
-  // still owns the row (for RLS and moderation) but nobody sees their name;
-  // the byline reads as Amazing Church Philippines with the church avatar.
+  // System posts are authored by the church profile row, so its avatar and
+  // name come straight through the join. The badge stays as a signal that
+  // this speaks for the church rather than a member.
   const isSystem = !!item.is_system;
-  const name = isSystem ? 'Amazing Church Philippines' : (item.author?.full_name || 'Member');
-  const avatar = isSystem ? '/logo.png' : item.author?.avatar_url;
+  const name = item.author?.full_name || (isSystem ? 'Amazing Church Philippines' : 'Member');
+  const avatar = item.author?.avatar_url || (isSystem ? '/logo.png' : undefined);
   return (
     <div className="flex items-center gap-3">
       <Avatar url={avatar} name={name} size={size} fit={isSystem ? 'contain' : 'cover'} />
