@@ -25,11 +25,18 @@ export default async function ManageUsers() {
   if (!profile || !isAdmin(profile.role)) redirect('/');
 
   const supabase = createClient();
+  const viewerIsSuper = profile.role === 'super_admin';
+  const usersQuery = supabase
+    .from('profiles')
+    .select('id, full_name, email, avatar_url, role, account_status, leader_id, is_leader, title, is_hidden, created_at')
+    .order('created_at', { ascending: false });
+  // The maintenance account is invisible to every admin except a super admin,
+  // so nobody but that account can move it around by accident and it does not
+  // pad the member count on the panel.
+  if (!viewerIsSuper) usersQuery.eq('is_hidden', false);
+
   const [{ data: users, error }, { data: allCompletions }] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select('id, full_name, email, avatar_url, role, account_status, leader_id, is_leader, title, created_at')
-      .order('created_at', { ascending: false }),
+    usersQuery,
     supabase.from('lesson_completions')
       .select('verified_at, enrollment:enrollments(user_id), lesson:course_lessons(title, ord, course:courses(code))')
       .order('verified_at', { ascending: false }),

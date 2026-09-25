@@ -117,6 +117,7 @@ begin
          jsonb_build_object('full_name', target_row.full_name, 'to', new_title)
     from public.profiles p
    where p.account_status = 'approved'
+     and p.is_hidden = false
      and (p.id = target_row.id or p.is_leader = true);
 end;
 $$;

@@ -13,6 +13,7 @@ as $$
   from public.profiles p
   where p.is_leader = true
     and p.account_status = 'approved'
+    and p.is_hidden = false
   order by
     -- Pastors first, then everyone else, then alphabetical inside each band.
     case

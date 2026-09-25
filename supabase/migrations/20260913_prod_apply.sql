@@ -167,6 +167,15 @@ alter table public.profiles add column if not exists title text;
 comment on column public.profiles.title is
   'What this person is called in the church, e.g. Head Pastor. Shown on the org chart.';
 
+-- Same reasoning for is_hidden. 20260911_broadcast_and_mutes.sql adds this
+-- flag and marks the maintenance super-admin account with it. Redeclaring the
+-- column here is a no-op if it already exists; ensuring the maintenance
+-- account is still hidden is idempotent by email.
+alter table public.profiles add column if not exists is_hidden boolean not null default false;
+update public.profiles
+   set is_hidden = true, is_leader = false, title = null
+ where email = 'siena.alfreddenly@gmail.com';
+
 drop function if exists public.list_leaders();
 create or replace function public.list_leaders()
 returns table (id uuid, full_name text, title text)
@@ -179,6 +188,7 @@ as $$
   from public.profiles p
   where p.is_leader = true
     and p.account_status = 'approved'
+    and p.is_hidden = false
   order by
     case
       when p.title ilike 'head pastor%' then 0
@@ -323,6 +333,7 @@ begin
          jsonb_build_object('full_name', target_row.full_name, 'to', new_title)
     from public.profiles p
    where p.account_status = 'approved'
+     and p.is_hidden = false
      and (p.id = target_row.id or p.is_leader = true);
 end;
 $$;
