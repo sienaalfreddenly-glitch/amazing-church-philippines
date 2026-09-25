@@ -8,6 +8,7 @@ import Tilt3D from '@/components/Tilt3D';
 import { IconChat, IconCamera, IconCalendar, IconUsers, IconMapPin, IconInbox, IconArrow } from '@/components/Icons';
 import { createClient } from '@/lib/supabase-server';
 import { eventDate, eventDateParts } from '@/lib/format';
+import { getContent } from '@/lib/content';
 
 // Re-render at least every minute so the Daily Verse rolls over promptly
 // after midnight Asia/Manila (GMT+8).
@@ -43,6 +44,18 @@ export default async function Home() {
   const { data: events } = await supabase
     .from('events').select('*').gte('starts_at', new Date().toISOString())
     .order('starts_at', { ascending: true }).limit(3);
+
+  const [
+    fbHeading, fbSubtitle, eventsHeading,
+    communityEyebrow, communityHeading, communityBody,
+  ] = await Promise.all([
+    getContent('home.facebook.heading'),
+    getContent('home.facebook.subtitle'),
+    getContent('home.events.heading'),
+    getContent('home.community.eyebrow'),
+    getContent('home.community.heading'),
+    getContent('home.community.body'),
+  ]);
 
   return (
     <div className="space-y-20 sm:space-y-28">
@@ -111,8 +124,8 @@ export default async function Home() {
       {/* Facebook + events */}
       <section className="grid gap-12 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <Reveal>
-          <h2 className="text-2xl sm:text-3xl">From our Facebook page</h2>
-          <p className="mt-1 text-sm text-ink/55">Livestreams and announcements, as they post.</p>
+          <h2 className="text-2xl sm:text-3xl">{fbHeading}</h2>
+          <p className="mt-1 text-sm text-ink/55">{fbSubtitle}</p>
           <hr className="gilt-rule mt-5" />
           <div className="mt-6">
             <Tilt3D max={4} scale={1.01}>
@@ -124,7 +137,7 @@ export default async function Home() {
         <div className="space-y-10">
           <Reveal delay={120}>
             <div className="flex items-baseline justify-between gap-4">
-              <h2 className="text-2xl sm:text-3xl">Upcoming events</h2>
+              <h2 className="text-2xl sm:text-3xl">{eventsHeading}</h2>
               <Link href="/events" className="text-sm font-medium text-brand underline-offset-4 hover:underline">
                 All events
               </Link>
@@ -189,10 +202,10 @@ export default async function Home() {
                       'radial-gradient(360px 280px at 94% 98%, rgba(38,9,13,0.7), transparent 62%)',
                   }}
                 >
-                  <p className="gilt-text text-[11px] font-semibold uppercase tracking-[0.26em]">Community</p>
-                  <h3 className="mt-2 text-2xl text-white">Share what God is doing</h3>
-                  <p className="mt-2 max-w-prose text-sm text-white/70">
-                    Post a testimony, start a discussion, or encourage another member with a reaction or a comment.
+                  <p className="gilt-text text-[11px] font-semibold uppercase tracking-[0.26em]">{communityEyebrow}</p>
+                  <h3 className="mt-2 text-2xl text-white">{communityHeading}</h3>
+                  <p className="mt-2 max-w-prose text-sm text-white/70 whitespace-pre-line">
+                    {communityBody}
                   </p>
                   <div className="card-foot flex flex-wrap items-center gap-x-4 gap-y-3">
                     <Link href="/feed" className="btn-outline border-gilt/40 bg-white/10 text-white hover:bg-white/20">

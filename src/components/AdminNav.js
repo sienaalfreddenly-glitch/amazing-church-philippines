@@ -22,6 +22,11 @@ const TABS = [
   { href: '/admin/news', label: 'News', admin: true },
   { href: '/admin/courses', label: 'Courses', admin: true },
   { href: '/admin/hero-slides', label: 'Hero slides', admin: true },
+  // Site copy is super-admin only; the layout still lets any admin *see* the
+  // tab, but the page itself refuses non-super. Hiding it entirely from an
+  // admin who is one click from becoming super feels furtive; the page's
+  // refusal message is honest about the reason.
+  { href: '/admin/content', label: 'Site copy', admin: true },
 ];
 
 export default function AdminNav({ isAdmin }) {
