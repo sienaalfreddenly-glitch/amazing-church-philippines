@@ -2,6 +2,7 @@ import { createClient, getSessionAndProfile } from '@/lib/supabase-server';
 import { redirect } from 'next/navigation';
 import { isStaff } from '@/lib/roles';
 import ConfirmDeleteEventButton from '@/components/ConfirmDeleteEventButton';
+import EventCoverField from '@/components/EventCoverField';
 import { IconMapPin } from '@/components/Icons';
 import Link from 'next/link';
 import { eventDate } from '@/lib/format';
@@ -123,8 +124,8 @@ function EventForm({ event }) {
         <input className="input" name="location" defaultValue={e.location || ''} placeholder="Church address, Zoom, etc." />
       </div>
       <div>
-        <label className="label">Cover image URL (optional)</label>
-        <input className="input" name="cover_url" defaultValue={e.cover_url || ''} placeholder="https://…" />
+        <label className="label">Cover image (optional)</label>
+        <EventCoverField initialUrl={e.cover_url || ''} />
       </div>
       <div className="flex justify-end">
         <button className="btn-primary">{e.id ? 'Save changes' : 'Create event'}</button>
