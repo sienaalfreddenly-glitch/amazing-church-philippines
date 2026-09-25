@@ -9,7 +9,10 @@ import { isAdmin } from '@/lib/roles';
 // group. When a former leader is stepped down to Member, anyone who reported
 // to them is unpinned from that leader so the org chart does not point at a
 // leader flag that is no longer set.
-const CHURCH_ROLES = ['Head Pastor', 'Pastor', 'Leader', 'Member'];
+// Biblical role labels. "Disciple" is the non-leader default; the first three
+// are all leaders on the org chart and differ only in the title beside their
+// name.
+const CHURCH_ROLES = ['Head Pastor', 'Pastor', 'Leader', 'Disciple'];
 
 export async function POST(req) {
   const { profile } = await getSessionAndProfile();
@@ -17,16 +20,16 @@ export async function POST(req) {
 
   const form = await req.formData();
   const id = form.get('id');
-  const churchRole = String(form.get('church_role') || 'Member');
+  const churchRole = String(form.get('church_role') || 'Disciple');
   // Fall back to the legacy is_leader boolean for any caller still submitting
-  // the old form; treat true as Leader, false as Member.
+  // the old form; treat true as Leader, false as Disciple.
   const legacyBool = form.get('is_leader');
   let effectiveRole = CHURCH_ROLES.includes(churchRole) ? churchRole
     : legacyBool === 'true' ? 'Leader'
-    : legacyBool === 'false' ? 'Member'
-    : 'Member';
+    : legacyBool === 'false' ? 'Disciple'
+    : 'Disciple';
 
-  const isLeader = effectiveRole !== 'Member';
+  const isLeader = effectiveRole !== 'Disciple';
   const title    = isLeader ? effectiveRole : null;
 
   const admin = createAdminClient();

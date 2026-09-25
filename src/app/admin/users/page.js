@@ -145,22 +145,22 @@ export default async function ManageUsers() {
                   <select
                     id={`role-church-${u.id}`}
                     name="church_role"
-                    defaultValue={u.is_leader ? (u.title || 'Leader') : 'Member'}
+                    defaultValue={u.is_leader ? (u.title || 'Leader') : 'Disciple'}
                     className="input"
                   >
                     <option value="Head Pastor">Head Pastor</option>
                     <option value="Pastor">Pastor</option>
                     <option value="Leader">Leader</option>
-                    <option value="Member">Member</option>
+                    <option value="Disciple">Disciple</option>
                   </select>
                   <p className="mt-1 text-xs text-ink/45">
-                    Head Pastor, Pastor and Leader all lead a group; Member does not.
+                    Head Pastor, Pastor and Leader all shepherd a group; a Disciple does not yet.
                   </p>
                 </AutoForm>
 
                 <AutoForm action="/api/admin/set-leader">
                   <input type="hidden" name="id" value={u.id} />
-                  <label className="label" htmlFor={`reports-${u.id}`}>Cared for by</label>
+                  <label className="label" htmlFor={`reports-${u.id}`}>Shepherded by</label>
                   <select
                     id={`reports-${u.id}`}
                     name="leader_id"
