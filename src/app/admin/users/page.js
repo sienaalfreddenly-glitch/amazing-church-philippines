@@ -39,9 +39,13 @@ export default async function ManageUsers() {
   const { data: contacts } = await supabase.rpc('visible_contacts');
   const contactById = new Map((contacts || []).map(c => [c.id, c.contact_number]));
 
-  // Super admins and every is_hidden account (maintenance, church) are
-  // invisible to non-super viewers. Only a super admin can act on them here.
-  const list = (users || []).filter(u => viewerIsSuper || (u.role !== 'super_admin' && !u.is_hidden));
+  // The church profile is edited from /admin/church, never here, so it is
+  // always filtered out. Beyond that, super admins and every other hidden
+  // account are invisible to non-super viewers.
+  const CHURCH_ID = '11111111-1111-4111-8111-111111111111';
+  const list = (users || [])
+    .filter(u => u.id !== CHURCH_ID)
+    .filter(u => viewerIsSuper || (u.role !== 'super_admin' && !u.is_hidden));
   const leaders = list.filter(u => u.is_leader);
   const latestByUser = new Map();
   (allCompletions || []).forEach(c => {

@@ -6,11 +6,16 @@ import Avatar from './Avatar';
 import { IconPhoto } from './Icons';
 import MentionInput from './MentionInput';
 
+const CHURCH_ID = '11111111-1111-4111-8111-111111111111';
+const STAFF_ROLES = new Set(['super_admin', 'admin', 'moderator']);
+
 export default function PostComposer({ kind = 'post' }) {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [profile, setProfile] = useState(null);
+  const [church, setChurch] = useState(null);
+  const [asChurch, setAsChurch] = useState(false);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [mediaUrl, setMediaUrl] = useState('');
@@ -25,6 +30,14 @@ export default function PostComposer({ kind = 'post' }) {
     if (!user) return;
     const { data } = await supabase.from('profiles').select('id, full_name, email, role, account_status, avatar_url, leader_id, created_at, is_leader, must_change_password, facebook_url, instagram_url, title, terms_accepted_at, terms_accepted_version').eq('id', user.id).single();
     setProfile(data);
+    if (data && STAFF_ROLES.has(data.role)) {
+      // Pre-load the church profile so the composer can render its avatar
+      // and name the moment the toggle flips on.
+      const { data: c } = await supabase
+        .from('profiles').select('id, full_name, avatar_url')
+        .eq('id', CHURCH_ID).maybeSingle();
+      if (c) setChurch(c);
+    }
   })(); }, [supabase]);
 
   async function uploadFile(e) {
@@ -52,17 +65,34 @@ export default function PostComposer({ kind = 'post' }) {
     e.preventDefault(); setMsg(''); setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setMsg('Please sign in.'); setLoading(false); return; }
-    const table = kind === 'discussion' ? 'discussions' : 'posts';
-    const payload = kind === 'discussion'
-      ? { author_id: user.id, title, body, mentions }
-      : { author_id: user.id, title: title || null, body, media_url: mediaUrl || null, mentions };
-    const { error } = await supabase.from(table).insert(payload);
+    let error;
+    if (asChurch && church) {
+      // Route through the SECURITY DEFINER RPC so RLS does not need a
+      // second policy that would open a wider door than we want.
+      if (kind === 'discussion') {
+        ({ error } = await supabase.rpc('start_discussion_as_church', {
+          p_title: title, p_body: body,
+        }));
+      } else {
+        ({ error } = await supabase.rpc('post_as_church', {
+          p_body: body, p_title: title || null, p_media_url: mediaUrl || null,
+        }));
+      }
+    } else {
+      const table = kind === 'discussion' ? 'discussions' : 'posts';
+      const payload = kind === 'discussion'
+        ? { author_id: user.id, title, body, mentions }
+        : { author_id: user.id, title: title || null, body, media_url: mediaUrl || null, mentions };
+      ({ error } = await supabase.from(table).insert(payload));
+    }
     setLoading(false);
     if (error) return setMsg(error.message);
-    setTitle(''); setBody(''); setMediaUrl(''); setPreview(null); setMentions([]); setOpen(false);
-    setMsg(kind === 'discussion'
-      ? 'Submitted! Your discussion is pending approval.'
-      : 'Post shared with the community!');
+    setTitle(''); setBody(''); setMediaUrl(''); setPreview(null); setMentions([]); setAsChurch(false); setOpen(false);
+    setMsg(asChurch
+      ? 'Posted as Amazing Church Philippines.'
+      : kind === 'discussion'
+        ? 'Submitted! Your discussion is pending approval.'
+        : 'Post shared with the community!');
     router.refresh();
   }
 
@@ -85,16 +115,37 @@ export default function PostComposer({ kind = 'post' }) {
       ) : (
         <form onSubmit={submit} className="space-y-3">
           <div className="flex items-center gap-3">
-            <Avatar url={profile.avatar_url} name={profile.full_name} size={44} />
+            <Avatar
+              url={asChurch && church ? (church.avatar_url || '/logo.png') : profile.avatar_url}
+              name={asChurch && church ? church.full_name : profile.full_name}
+              size={44}
+              fit={asChurch ? 'contain' : 'cover'}
+            />
             <div className="flex-1">
-              <p className="text-sm font-medium">{profile.full_name}</p>
+              <p className="text-sm font-medium">
+                {asChurch && church ? church.full_name : profile.full_name}
+              </p>
               <p className="text-xs text-ink/60">
-                {kind === 'discussion' ? 'New discussion · will be reviewed by staff' : 'New post'}
+                {asChurch
+                  ? 'Posting as the church · everyone will be notified'
+                  : (kind === 'discussion' ? 'New discussion · will be reviewed by staff' : 'New post')}
               </p>
             </div>
             <button type="button" onClick={() => setOpen(false)}
               className="text-ink/50 hover:text-ink text-xl leading-none">×</button>
           </div>
+
+          {STAFF_ROLES.has(profile.role) && church && (
+            <label className="flex items-center gap-2 rounded-xl bg-brand-50/60 px-3 py-2 text-sm text-ink/75 ring-1 ring-brand-100">
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-brand"
+                checked={asChurch}
+                onChange={(e) => setAsChurch(e.target.checked)}
+              />
+              Post as <strong className="font-semibold">{church.full_name}</strong> instead of me.
+            </label>
+          )}
 
           <input className="input" placeholder={kind === 'discussion' ? 'Discussion title' : 'Title (optional)'}
             value={title} onChange={e => setTitle(e.target.value)}
