@@ -152,7 +152,14 @@ export default function NotificationBell() {
                   ${!n.read_at ? 'bg-brand-50/40' : ''}`}>
                   <a href={linkFor(n)} onClick={() => markOne(n.id)}
                     className="flex items-start gap-3 px-4 py-3 hover:bg-silver-light/40">
-                    <Avatar url={n.actor?.avatar_url} name={n.actor?.full_name || ''} size={34} />
+                    {/* Promotions are announcements from the church, not from
+                        the person who pressed the button, so the avatar and
+                        name shown beside the row are the church's. */}
+                    {n.kind === 'promoted' ? (
+                      <Avatar url="/logo.png" name="Amazing Church Philippines" size={34} />
+                    ) : (
+                      <Avatar url={n.actor?.avatar_url} name={n.actor?.full_name || ''} size={34} />
+                    )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm leading-snug">{renderMessage(n)}</p>
                       <p className="text-xs text-ink/50 mt-0.5">{timeAgo(n.created_at)}</p>
