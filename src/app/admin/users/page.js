@@ -29,7 +29,7 @@ export default async function ManageUsers() {
   const [{ data: users, error }, { data: allCompletions }] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id, full_name, email, avatar_url, role, account_status, leader_id, is_leader, title, is_hidden, created_at')
+      .select('id, full_name, email, avatar_url, role, account_status, leader_id, is_leader, title, created_at')
       .order('created_at', { ascending: false }),
     supabase.from('lesson_completions')
       .select('verified_at, enrollment:enrollments(user_id), lesson:course_lessons(title, ord, course:courses(code))')
@@ -39,13 +39,13 @@ export default async function ManageUsers() {
   const { data: contacts } = await supabase.rpc('visible_contacts');
   const contactById = new Map((contacts || []).map(c => [c.id, c.contact_number]));
 
-  // The church profile is edited from /admin/church, never here, so it is
-  // always filtered out. Beyond that, super admins and every other hidden
-  // account are invisible to non-super viewers.
+  // Only two rows ever get filtered out here: the church profile (which is
+  // edited from /admin/church, not from the members list), and super-admin
+  // rows for anyone who is not themselves a super admin.
   const CHURCH_ID = '11111111-1111-4111-8111-111111111111';
   const list = (users || [])
     .filter(u => u.id !== CHURCH_ID)
-    .filter(u => viewerIsSuper || (u.role !== 'super_admin' && !u.is_hidden));
+    .filter(u => viewerIsSuper || u.role !== 'super_admin');
   const leaders = list.filter(u => u.is_leader);
   const latestByUser = new Map();
   (allCompletions || []).forEach(c => {
