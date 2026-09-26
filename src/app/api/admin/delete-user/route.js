@@ -1,6 +1,23 @@
 import { NextResponse } from 'next/server';
-import { createAdminClient, getSessionAndProfile } from '@/lib/supabase-server';
+import { createClient as createSbClient } from '@supabase/supabase-js';
+import { getSessionAndProfile } from '@/lib/supabase-server';
+import { SERVER_SUPABASE_URL, TUNNEL_HEADERS } from '@/lib/supabase-config';
 import { isAdmin } from '@/lib/roles';
+
+// Delete cascades in Postgres can outrun the site-wide 5-second upstream
+// timeout used by the shared admin client, and the auth service then hands
+// back AuthRetryableFetchError with an empty message. Give this route its
+// own client with plenty of headroom and no timeout on the fetch.
+function makeAdminClientForDelete() {
+  return createSbClient(
+    SERVER_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    {
+      auth: { autoRefreshToken: false, persistSession: false },
+      global: { headers: TUNNEL_HEADERS },
+    },
+  );
+}
 
 // A supabase-js error is often a plain object whose keys are not on its own
 // prototype (message, code, details, hint sit as enumerable getters). Grab
@@ -39,7 +56,7 @@ export async function POST(req) {
     );
   }
 
-  const admin = createAdminClient();
+  const admin = makeAdminClientForDelete();
   const { data: target } = await admin.from('profiles').select('role').eq('id', id).single();
   if (target?.role === 'super_admin' && profile.role !== 'super_admin')
     return NextResponse.json({ error: 'only super_admin can delete a super_admin' }, { status: 403 });
