@@ -23,12 +23,18 @@ export async function POST(req) {
   // Any of these tables might not exist on a given environment; a missing
   // table returns a "relation does not exist" error we can safely ignore.
   // Anything else is a real problem and gets surfaced back to the caller.
+  // PostgREST can wrap a missing table or column as either a Postgres SQLSTATE
+  // code (42P01 / 42703) or a JSON message like "Could not find the 'x'
+  // column of 'y' in the schema cache" (code PGRST204). Swallow both so a
+  // schema an environment has not caught up on does not fail the delete.
   const tolerate = async (op) => {
     const { error } = await op;
     if (!error) return;
-    // 42P01 = undefined_table, 42703 = undefined_column. Missing schema on
-    // an environment that has not caught up yet is not a delete failure.
-    if (error.code === '42P01' || error.code === '42703') return;
+    const code = error.code || '';
+    const msg  = error.message || '';
+    if (code === '42P01' || code === '42703' || code === 'PGRST204' || code === 'PGRST205') return;
+    if (/could not find the .* column/i.test(msg)) return;
+    if (/does not exist/i.test(msg) && /column|relation|table/i.test(msg)) return;
     throw error;
   };
 
