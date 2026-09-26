@@ -20,13 +20,25 @@ export async function POST(req) {
   // profiles). Anything the caller does not have permission to touch
   // through the service-role client is a genuine problem worth reporting
   // rather than swallowing.
+  // Any of these tables might not exist on a given environment; a missing
+  // table returns a "relation does not exist" error we can safely ignore.
+  // Anything else is a real problem and gets surfaced back to the caller.
+  const tolerate = async (op) => {
+    const { error } = await op;
+    if (!error) return;
+    // 42P01 = undefined_table, 42703 = undefined_column. Missing schema on
+    // an environment that has not caught up yet is not a delete failure.
+    if (error.code === '42P01' || error.code === '42703') return;
+    throw error;
+  };
+
   try {
-    await admin.from('notifications').delete().or(`user_id.eq.${id},actor_id.eq.${id}`);
-    await admin.from('reactions').delete().eq('user_id', id).throwOnError().catch(() => null);
-    await admin.from('posts').update({ moderated_by: null }).eq('moderated_by', id);
-    await admin.from('discussions').update({ moderated_by: null }).eq('moderated_by', id);
-    await admin.from('comments').update({ moderated_by: null }).eq('moderated_by', id).throwOnError().catch(() => null);
-    await admin.from('profiles').update({ leader_id: null }).eq('leader_id', id);
+    await tolerate(admin.from('notifications').delete().or(`user_id.eq.${id},actor_id.eq.${id}`));
+    await tolerate(admin.from('reactions').delete().eq('user_id', id));
+    await tolerate(admin.from('posts').update({ moderated_by: null }).eq('moderated_by', id));
+    await tolerate(admin.from('discussions').update({ moderated_by: null }).eq('moderated_by', id));
+    await tolerate(admin.from('comments').update({ moderated_by: null }).eq('moderated_by', id));
+    await tolerate(admin.from('profiles').update({ leader_id: null }).eq('leader_id', id));
     const { error: authError } = await admin.auth.admin.deleteUser(id);
     if (authError) {
       return NextResponse.json({ error: authError.message }, { status: 400 });
