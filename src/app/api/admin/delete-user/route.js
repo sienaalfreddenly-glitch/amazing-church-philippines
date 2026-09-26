@@ -2,12 +2,42 @@ import { NextResponse } from 'next/server';
 import { createAdminClient, getSessionAndProfile } from '@/lib/supabase-server';
 import { isAdmin } from '@/lib/roles';
 
+// A supabase-js error is often a plain object whose keys are not on its own
+// prototype (message, code, details, hint sit as enumerable getters). Grab
+// every field we can so the JSON response never says just '{}'.
+function describeError(e) {
+  if (!e) return 'unknown error';
+  if (typeof e === 'string') return e;
+  const parts = {
+    name:    e.name    || undefined,
+    message: e.message || undefined,
+    code:    e.code    || undefined,
+    status:  e.status  || e.statusCode || undefined,
+    details: e.details || undefined,
+    hint:    e.hint    || undefined,
+    error:   typeof e.error === 'string' ? e.error : undefined,
+  };
+  const nonEmpty = Object.fromEntries(Object.entries(parts).filter(([, v]) => v !== undefined));
+  if (Object.keys(nonEmpty).length > 0) return nonEmpty;
+  // Last resort: dump anything JSON.stringify can see.
+  try { return JSON.parse(JSON.stringify(e)); } catch { return String(e); }
+}
+
 export async function POST(req) {
   const { profile } = await getSessionAndProfile();
   if (!isAdmin(profile?.role)) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
   const form = await req.formData();
   const id = form.get('id');
   if (id === profile.id) return NextResponse.json({ error: "can't delete yourself" }, { status: 400 });
+
+  // Service-role key is what makes auth.admin.deleteUser work. Without it the
+  // call errors from inside supabase-js with an unhelpful shape.
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json(
+      { error: 'SUPABASE_SERVICE_ROLE_KEY is not set on this deployment. Add it in Vercel → Settings → Environment Variables and redeploy.' },
+      { status: 500 },
+    );
+  }
 
   const admin = createAdminClient();
   const { data: target } = await admin.from('profiles').select('role').eq('id', id).single();
@@ -47,10 +77,14 @@ export async function POST(req) {
     await tolerate(admin.from('profiles').update({ leader_id: null }).eq('leader_id', id));
     const { error: authError } = await admin.auth.admin.deleteUser(id);
     if (authError) {
-      return NextResponse.json({ error: authError.message }, { status: 400 });
+      // eslint-disable-next-line no-console
+      console.error('delete-user auth.admin.deleteUser failed:', authError);
+      return NextResponse.json({ error: describeError(authError) }, { status: 400 });
     }
   } catch (e) {
-    return NextResponse.json({ error: e?.message || 'delete failed' }, { status: 400 });
+    // eslint-disable-next-line no-console
+    console.error('delete-user cleanup failed:', e);
+    return NextResponse.json({ error: describeError(e) }, { status: 400 });
   }
   return NextResponse.redirect(new URL('/admin/users', req.url), { status: 303 });
 }
