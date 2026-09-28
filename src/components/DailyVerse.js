@@ -1,5 +1,6 @@
 import { createClient, getSessionAndProfile } from '@/lib/supabase-server';
 import { readVisitorId } from '@/lib/visitor';
+import { fetchDailyVerse } from '@/lib/bible';
 
 const TZ = 'Asia/Manila';
 
@@ -27,15 +28,23 @@ export default async function DailyVerse() {
   // cannot set cookies. Until one exists this renders the invitation below.
   const visitorId = user ? null : readVisitorId();
 
-  const { data, error } = user
-    ? await supabase.rpc('my_daily_content')
-    : visitorId
-      ? await supabase.rpc('visitor_daily_content', { p_visitor: visitorId })
-      : { data: null, error: null };
+  // ESV API is the primary source (WEB if no key). Seeded per reader per day,
+  // so a reload still shows the same passage.
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(new Date());
+  const verse = await fetchDailyVerse(`${user?.id || visitorId || 'guest'}:${today}`).catch(() => null);
+  let entry = verse && { verse_ref: verse.reference, verse_text: verse.text, assigned_on: today };
 
-  const entry = Array.isArray(data) ? data[0] : data;
+  // API down: fall back to the database draw.
+  if (!entry) {
+    const { data } = user
+      ? await supabase.rpc('my_daily_content')
+      : visitorId
+        ? await supabase.rpc('visitor_daily_content', { p_visitor: visitorId })
+        : { data: null };
+    entry = Array.isArray(data) ? data[0] : data;
+  }
 
-  if (error || !entry) {
+  if (!entry) {
     return (
       <section
         aria-labelledby="daily-verse-heading"
