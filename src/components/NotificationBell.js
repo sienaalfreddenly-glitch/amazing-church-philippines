@@ -132,7 +132,12 @@ export default function NotificationBell() {
     else if (n.kind === 'reaction')   suffix = ` ${n.entity_type}${n.metadata?.emoji ? ' (' + n.metadata.emoji + ')' : ''}`;
     else if (n.kind === 'comment')    suffix = ` ${n.entity_type}`;
     else if (n.kind === 'mention')    suffix = ` ${n.entity_type}`;
-    else if (n.kind === 'unassigned_member' || n.kind === 'new_member') suffix = '';
+    else if (n.kind === 'unassigned_member') suffix = '';
+    else if (n.kind === 'new_member') {
+      suffix = n.metadata?.leader_id === n.user_id ? ' and chose you as their leader'
+        : n.metadata?.leader_name ? ` and was assigned to ${n.metadata.leader_name}`
+        : ' with no leader yet';
+    }
     else if (n.kind === 'ministry_interest') suffix = ` ${n.metadata?.ministry || 'a ministry'}`;
     else if (n.kind === 'event_interest') suffix = ` ${n.metadata?.title || 'an event'}`;
     else if (n.kind?.startsWith('new_')) suffix = n.metadata?.title ? `: ${n.metadata.title}` : '';
