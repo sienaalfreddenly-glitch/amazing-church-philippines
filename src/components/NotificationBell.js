@@ -13,6 +13,8 @@ const KIND_TEXT = {
   mention:         'mentioned you in a',
   // Sent to every leader when someone signs up without choosing one.
   unassigned_member: 'signed up without a leader',
+  // Sent to staff and the chosen leader on every signup.
+  new_member:      'signed up',
   ministry_interest: 'is interested in',
   new_post:       'posted',
   new_discussion: 'started a discussion',
@@ -130,7 +132,7 @@ export default function NotificationBell() {
     else if (n.kind === 'reaction')   suffix = ` ${n.entity_type}${n.metadata?.emoji ? ' (' + n.metadata.emoji + ')' : ''}`;
     else if (n.kind === 'comment')    suffix = ` ${n.entity_type}`;
     else if (n.kind === 'mention')    suffix = ` ${n.entity_type}`;
-    else if (n.kind === 'unassigned_member') suffix = '';
+    else if (n.kind === 'unassigned_member' || n.kind === 'new_member') suffix = '';
     else if (n.kind === 'ministry_interest') suffix = ` ${n.metadata?.ministry || 'a ministry'}`;
     else if (n.kind === 'event_interest') suffix = ` ${n.metadata?.title || 'an event'}`;
     else if (n.kind?.startsWith('new_')) suffix = n.metadata?.title ? `: ${n.metadata.title}` : '';
