@@ -49,7 +49,9 @@ export default async function InterestedPage({ params }) {
 
   const { data: interests } = await supabase
     .from('ministry_interests')
-    .select('id, created_at, note, status, role_in_team, profile:profiles(id, full_name, avatar_url, email, title, facebook_url, instagram_url)')
+    // Named FK: decided_by also points at profiles, and an unnamed embed is
+    // ambiguous, so PostgREST returned an error and the list came back empty.
+    .select('id, created_at, note, status, role_in_team, profile:profiles!ministry_interests_profile_id_fkey(id, full_name, avatar_url, email, title, facebook_url, instagram_url)')
     .eq('ministry_id', ministry.id)
     .order('created_at', { ascending: false });
 

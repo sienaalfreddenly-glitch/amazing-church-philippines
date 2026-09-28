@@ -110,7 +110,9 @@ export default function PostCard({
   }
 
   return (
-    <article className="card">
+    // Anchor target for notifications that open the feed at this post.
+    // scroll-mt clears the sticky header.
+    <article id={`${entityType}-${item.id}`} className="card scroll-mt-24">
       <header className="flex items-start justify-between gap-4">
         <Byline item={item} />
         <div className="flex shrink-0 items-center gap-2">

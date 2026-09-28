@@ -28,6 +28,10 @@ const KIND_TEXT = {
 };
 
 function linkFor(n) {
+  // Announcements open the feed scrolled to their post. new_event points at
+  // the event row; its feed post id is stamped into metadata by the trigger.
+  if (n.kind === 'new_event' && n.metadata?.post_id) return `/feed#post-${n.metadata.post_id}`;
+  if (n.entity_type === 'post' && ['promoted', 'new_post'].includes(n.kind)) return `/feed#post-${n.entity_id}`;
   if (n.entity_type === 'post')       return `/posts/${n.entity_id}`;
   if (n.entity_type === 'discussion') return `/discussions/${n.entity_id}`;
   if (n.entity_type === 'course')     return `/courses/${n.entity_id}`;
