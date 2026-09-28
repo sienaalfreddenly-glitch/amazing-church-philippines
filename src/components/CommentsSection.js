@@ -99,7 +99,7 @@ export default function CommentsSection({ entityType, entityId, initialLimit = 3
             <Avatar url={c.author?.avatar_url} name={c.author?.full_name || ''} size={36} />
             <div className="flex-1 min-w-0">
               <div className="bg-silver-light/50 rounded-2xl px-3 py-2">
-                <p className="text-sm font-medium">{c.author?.full_name || 'Member'}</p>
+                <p className="text-sm font-medium">{c.author?.full_name || (c.author_id ? 'Member' : 'Former member')}</p>
                 <p className="text-sm whitespace-pre-wrap"><RenderMentions body={c.body} /></p>
               </div>
               <div className="mt-1 flex gap-3 text-xs text-ink/50 items-center">

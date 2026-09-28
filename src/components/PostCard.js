@@ -48,7 +48,7 @@ function Byline({ item, size = 40 }) {
   // name come straight through the join. The badge stays as a signal that
   // this speaks for the church rather than a member.
   const isSystem = !!item.is_system;
-  const name = item.author?.full_name || (isSystem ? 'Amazing Church Philippines' : 'Member');
+  const name = item.author?.full_name || (isSystem ? 'Amazing Church Philippines' : item.author_id ? 'Member' : 'Former member');
   const avatar = item.author?.avatar_url || (isSystem ? '/logo.png' : undefined);
   return (
     <div className="flex items-center gap-3">

@@ -23,7 +23,7 @@ export default async function PostDetail({ params }) {
         <div className="flex items-center gap-3">
           <Avatar url={post.author?.avatar_url} name={post.author?.full_name || ''} size={40} />
           <div>
-            <p className="font-medium">{post.author?.full_name}</p>
+            <p className="font-medium">{post.author?.full_name || 'Former member'}</p>
             <p className="text-xs text-ink/50"><TimeAgo date={post.created_at} /></p>
           </div>
         </div>

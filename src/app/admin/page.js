@@ -67,7 +67,7 @@ export default async function AdminHome() {
         <div className="space-y-3">
           {pendingPosts?.length ? pendingPosts.map(p => (
             <div key={p.id} className="card">
-              <p className="text-xs uppercase text-ink/50">{p.author?.full_name} · <TimeAgo date={p.created_at} /></p>
+              <p className="text-xs uppercase text-ink/50">{p.author?.full_name || 'Former member'} ·<TimeAgo date={p.created_at} /></p>
               {p.title && <h3 className="text-lg mt-1">{p.title}</h3>}
               <p className="mt-2 whitespace-pre-wrap">{p.body}</p>
               <ModerationActions kind="post" id={p.id} status={p.status} />
@@ -84,7 +84,7 @@ export default async function AdminHome() {
         <div className="space-y-3">
           {pendingDiscussions?.length ? pendingDiscussions.map(d => (
             <div key={d.id} className="card">
-              <p className="text-xs uppercase text-ink/50">{d.author?.full_name} · <TimeAgo date={d.created_at} /></p>
+              <p className="text-xs uppercase text-ink/50">{d.author?.full_name || 'Former member'} ·<TimeAgo date={d.created_at} /></p>
               <h3 className="text-lg mt-1">{d.title}</h3>
               <p className="mt-2 whitespace-pre-wrap">{d.body}</p>
               <ModerationActions kind="discussion" id={d.id} status={d.status} />
