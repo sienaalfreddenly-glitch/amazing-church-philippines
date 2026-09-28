@@ -1,7 +1,8 @@
 import { createClient, getSessionAndProfile } from '@/lib/supabase-server';
 import { redirect } from 'next/navigation';
-import { isAdmin } from '@/lib/roles';
+import { isAdmin, isStaff } from '@/lib/roles';
 import Link from 'next/link';
+import ConfirmDeleteCourseButton from '@/components/ConfirmDeleteCourseButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -103,9 +104,13 @@ export default async function CoursesPage() {
                     {c.prereq_id && <span className="badge bg-silver-light">Requires {codeById.get(c.prereq_id) || 'prereq'}</span>}
                   </div>
                 </div>
-                {me
-                  ? <span className={`badge ${STATUS_STYLE[me.status]}`}>{me.status}</span>
-                  : <span className="badge bg-silver-light text-ink/60">not enrolled</span>}
+                <div className="flex shrink-0 items-center gap-2">
+                  {me
+                    ? <span className={`badge ${STATUS_STYLE[me.status]}`}>{me.status}</span>
+                    : <span className="badge bg-silver-light text-ink/60">not enrolled</span>}
+                  {/* Moderators can't open /admin/courses, so staff delete from here too. */}
+                  {isStaff(profile?.role) && <ConfirmDeleteCourseButton id={c.id} name={`${c.code} — ${c.name}`} />}
+                </div>
               </div>
 
               {me && totalLessons > 0 && (

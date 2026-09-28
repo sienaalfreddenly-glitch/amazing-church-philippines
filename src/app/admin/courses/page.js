@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { isAdmin } from '@/lib/roles';
 import AutoForm from '@/components/AutoForm';
 import Link from 'next/link';
+import ConfirmDeleteCourseButton from '@/components/ConfirmDeleteCourseButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -104,9 +105,12 @@ export default async function ManageCourses() {
                     </AutoForm>
                   </td>
                   <td className="px-4 py-3">
-                    <Link href={`/admin/courses/${c.id}`} className="text-brand hover:underline text-xs font-semibold">
-                      Manage lessons →
-                    </Link>
+                    <div className="flex items-center justify-end gap-3">
+                      <Link href={`/admin/courses/${c.id}`} className="text-brand hover:underline text-xs font-semibold">
+                        Manage lessons →
+                      </Link>
+                      <ConfirmDeleteCourseButton id={c.id} name={`${c.code} — ${c.name}`} back="/admin/courses" />
+                    </div>
                   </td>
                 </tr>
               ))}
